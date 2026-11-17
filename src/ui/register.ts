@@ -1,5 +1,5 @@
 import type { Store, Schedule, ScheduleType, Difficulty, Grade, ParsedNotice, AddPreview, Recommendation, Weather } from '../types';
-import { defaultsFor, previewAdd, recommendDates, addDays, weekIndexOf, SEMESTER, TYPE_LABEL, WEATHER_LABEL } from '../calc/index';
+import { defaultsFor, previewAdd, recommendDates, addDays, weekIndexOf, weekRange, SEMESTER, TYPE_LABEL, WEATHER_LABEL } from '../calc/index';
 import { parseNotice, MAX_NOTICE_LENGTH } from '../parser/index';
 import { SAMPLE_NOTICES } from '../data/samples';
 
@@ -258,11 +258,17 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
     pvTop.hidden = false;
     if (!recs.length) { pvTop.innerHTML = `<p class="sub">옮기기 좋은 맑은 날을 찾지 못했어요.</p>`; return; }
     const morning = EVENT_MORNING.includes(draft.type);
-    pvTop.innerHTML = `<p class="rg-top-title">옮기기 좋은 맑은 날 TOP 3</p>` + recs.map((r, i) => {
+    const allStorm = recs.every((r) => r.weather === 'storm');
+    pvTop.innerHTML = `<p class="rg-top-title">맑은 주 TOP 3</p><p class="sub">준비 기간이 걸치는 주의 R이 가장 낮은 순서예요.</p>`
+      + (allStorm ? `<p class="sub" data-testid="preview-top3-note">전후 3주가 모두 폭풍이에요. 그중 가장 약한 주부터 보여 드려요.</p>` : '')
+      + recs.map((r, i) => {
       // 추천 date는 due 기준 → 입력 칸 날짜(행사일)로 환산
       const inputDate = morning ? plusDays(r.date, 1) : r.date;
+      const wi = weekIdx(inputDate);
+      let wk: string;
+      try { const rg = weekRange(wi); wk = `${wi + 1}주(${md(rg.start)}~${md(rg.end)})`; } catch { wk = weekLabel(wi); }
       return `<div class="rg-top-item" data-testid="preview-top3-item-${i}" data-date="${inputDate}" data-r="${r2(r.maxR)}" data-weather="${r.weather}">
-        ${icon(r.weather)}<span>${mdDow(inputDate)} · 예상 R <span class="num">${r2(r.maxR)}</span> · ${WEATHER_LABEL[r.weather]}</span>
+        ${icon(r.weather)}<span>${wk} · ${mdDow(inputDate)} 마감 · 예상 R <span class="num">${r2(r.maxR)}</span> · ${WEATHER_LABEL[r.weather]}</span>
         <button type="button" class="btn btn-ghost rg-use" data-date="${inputDate}">이 날짜로</button></div>`;
     }).join('');
   };
