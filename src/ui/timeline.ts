@@ -161,9 +161,17 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     // 유형별 줄
     let rows = '';
     let labels = '';
-    for (const row of ROWS) {
+    const order = teacher ? ROWS : [...ROWS.filter((r) => r.key === 'personal'), ...ROWS.filter((r) => r.key !== 'personal')];
+    for (const row of order) {
       const items = list.filter((s) => row.types.includes(s.type)).sort((a, b) => span(a)[0] - span(b)[0]);
-      if (!items.length) continue;
+      if (!items.length) {
+        if (!teacher && row.key === 'personal') {
+          const h = LANE + PAD;
+          rows += `<div class="tl-row" data-row="${row.key}" style="height:${h}px"><div class="tl-row-track" style="height:${h}px;width:${DAYS * DAY}px;background-size:${7 * DAY}px 100%"><span class="tl-row-hint sub" style="position:sticky;left:8px;display:inline-block;line-height:${h}px;opacity:.6;font-size:12px;white-space:nowrap;pointer-events:none">플래너에서 과제를 추가하면 여기에 보여요.</span></div></div>`;
+          labels += `<div class="tl-row-label" data-row="${row.key}" style="height:${h}px">${row.label}</div>`;
+        }
+        continue;
+      }
       // 막대 끝(px). 이름이 막대 밖에 쓰이면 그 폭까지 포함해 겹침을 계산한다.
       const laneEnds: number[] = [];
       const placed: { s: Schedule; lane: number; a: number; b: number; out: boolean }[] = [];
