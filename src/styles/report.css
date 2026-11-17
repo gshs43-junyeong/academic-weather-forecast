@@ -1,0 +1,59 @@
+/* report — 학년 비교·주간 리포트(MVP 5, 교사) */
+.report { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--s2); align-items: start; min-width: 0; }
+.report > .glass { padding: var(--s3); min-width: 0; color: var(--ink); }
+.rp-empty { padding: var(--s3); grid-column: 1 / -1; font-size: var(--fs-body); }
+.rp-h { font-size: var(--fs-num); font-weight: var(--fw-b); margin: 0 0 var(--s1); }
+.report .sub { margin: 0; }
+
+.cmp-legend { display: flex; gap: var(--s2); margin: var(--s1) 0; }
+.cmp-legend span { display: inline-flex; align-items: center; gap: var(--s1); }
+.cmp-svg { display: block; height: auto; }
+.cmp-svg text { font-family: var(--font); }
+.cmp-band { font-size: 11px; fill: var(--ink-2); }
+.cmp-tick { font-size: 11px; fill: var(--ink-3); }
+.cmp-month { font-size: 11px; fill: var(--ink-2); font-weight: var(--fw-b); }
+.cmp-today { font-size: 11px; fill: var(--blue); font-weight: var(--fw-b); }
+.cmp-end { font-size: 12px; font-weight: var(--fw-b); }
+
+/* 날씨 띠: 차트 플롯 영역(viewBox 40~536 / 600)과 같은 시간축 */
+.cmp-strips { display: grid; gap: 4px; margin-top: var(--s1); }
+.cmp-strip { display: grid; grid-template-columns: 6.67% 82.67% 10.67%; align-items: center; }
+.cmp-strip-label { font-size: var(--fs-sub); color: var(--ink-2); }
+.cmp-strip.is-sel .cmp-strip-label { color: var(--ink); font-weight: var(--fw-b); }
+.cmp-cells { display: grid; grid-template-columns: repeat(18, 1fr); gap: 2px; }
+.cmp-cell { height: 16px; border-radius: 4px; background: var(--wc); }
+.cmp-cell.is-today { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+.cmp-counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s1); margin-top: var(--s2); }
+.cmp-count { display: flex; align-items: baseline; gap: 4px; padding: var(--s1) var(--s2); border-radius: var(--radius-s); border: 1px solid var(--line-ink); font-size: var(--fs-sub); color: var(--ink-2); }
+.cmp-count b { font-size: var(--fs-num); font-weight: var(--fw-b); color: var(--ink); }
+.cmp-count.is-sel { border-color: var(--ink); background: var(--glass-strong); color: var(--ink); }
+
+.rp-top { display: flex; justify-content: space-between; gap: var(--s2); align-items: flex-start; }
+.rp-title { margin: 0; }
+.rp-summary { margin: 4px 0 0; font-size: var(--fs-body); }
+.rp-actions { display: flex; gap: var(--s1); flex: none; }
+.rp-copied { min-height: 16px; margin: var(--s1) 0 0; }
+.rp-weeks { list-style: none; margin: var(--s1) 0 0; padding: 0; display: grid; gap: var(--s1); }
+.rp-week { border-left: 4px solid var(--wc); background: var(--glass-strong); border-radius: var(--radius-s); padding: var(--s1) var(--s2); }
+.rp-week-head { display: flex; align-items: center; gap: var(--s1); }
+.rp-week-head img { width: 32px; height: 32px; flex: none; }
+.rp-week-when { flex: 1; min-width: 0; }
+.rp-week-wx { display: flex; gap: var(--s1); align-items: baseline; }
+.rp-week[data-weather="storm"] .rp-week-wx b { color: var(--w-storm); }
+.rp-causes { list-style: none; margin: 4px 0 0 40px; padding: 0; font-size: var(--fs-sub); color: var(--ink-2); }
+.rp-causes li { display: flex; gap: var(--s1); align-items: baseline; }
+.rp-cname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.rp-fixed { font-size: 11px; padding: 0 var(--s1); border-radius: var(--radius-pill); border: 1px solid var(--line-ink); }
+
+@media print {
+  @page { size: A4; margin: 16mm; }
+  html, body { background: var(--white) !important; }
+  body::before, body::after { display: none !important; }
+  body * { visibility: hidden !important; }
+  .rp-card, .rp-card * { visibility: visible !important; }
+  .rp-card { position: absolute; left: 0; top: 0; width: 100%; background: var(--white) !important; color: var(--ink) !important; box-shadow: none !important; backdrop-filter: none !important; border: 0 !important; }
+  .rp-card .rp-actions, .rp-card .rp-copied { display: none !important; }
+  .rp-week { background: var(--white) !important; break-inside: avoid; }
+  .rp-card .sub, .rp-causes { color: var(--ink) !important; }
+}
