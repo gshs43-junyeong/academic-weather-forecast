@@ -1,1 +1,142 @@
-/* base */
+/* base — reset, 배경, 공용 부품(.glass .btn .btn-ghost .pill .badge .num .sub), 날씨 색 도우미, 머리말, 로그인 카드 */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+h1, h2, h3, h4, p, ul, ol, figure { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+img, svg { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+b, strong, h1, h2, h3, h4 { font-weight: var(--fw-b); }
+
+body {
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  font-weight: var(--fw);
+  line-height: 1.5;
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: linear-gradient(160deg, #1f3a2e 0%, #173025 45%, #0d1d16 100%); /* 로그인 전: 짙은 숲 */
+  background-attachment: fixed;
+  transition: background 0.6s var(--ease);
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+body[data-weather="sunny"] { background: linear-gradient(170deg, #7fbbe8 0%, #a9d3f0 45%, #f3d58a 100%); background-attachment: fixed; }
+body[data-weather="cloudy"] { background: linear-gradient(170deg, #8a96a3 0%, #a6afb9 50%, #6e7884 100%); background-attachment: fixed; }
+body[data-weather="rain"] { background: linear-gradient(170deg, #34495c 0%, #3e5567 50%, #6a4a36 100%); background-attachment: fixed; }
+body[data-weather="storm"] { background: linear-gradient(170deg, #1e1416 0%, #2c1418 50%, var(--w-storm-deep) 100%); background-attachment: fixed; }
+
+/* 가독성 막: 위는 투명, 아래로 갈수록 어둡게 */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: -1;
+  background: linear-gradient(180deg, rgba(8,12,20,0) 0%, rgba(8,12,20,.12) 50%, rgba(8,12,20,.42) 100%);
+  transition: background 0.6s var(--ease);
+}
+body[data-weather="storm"]::before {
+  background: linear-gradient(180deg, rgba(90,15,20,.08) 0%, rgba(40,8,12,.25) 50%, rgba(20,4,8,.55) 100%);
+}
+body > #app { position: relative; z-index: 0; }
+
+/* 날씨 색 도우미: 다른 담당은 var(--wc), var(--wc-soft)만 쓴다 */
+[data-weather="sunny"] { --wc: var(--w-sunny); --wc-soft: var(--w-sunny-soft); }
+[data-weather="cloudy"] { --wc: var(--w-cloudy); --wc-soft: var(--w-cloudy-soft); }
+[data-weather="rain"] { --wc: var(--w-rain); --wc-soft: var(--w-rain-soft); }
+[data-weather="storm"] { --wc: var(--w-storm); --wc-soft: var(--w-storm-soft); }
+
+/* 공용 부품 */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--s3);
+}
+.btn, .btn-ghost, .pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s1);
+  height: 40px; padding: 0 var(--s2);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-body); font-weight: var(--fw-b);
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.btn { background: var(--blue); color: var(--blue-ink); border: 1px solid var(--blue); }
+.btn:hover:not(:disabled) { box-shadow: 0 8px 24px rgba(37,99,235,.35); transform: translateY(-1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-ghost { background: var(--glass); color: var(--ink); border: 1px solid var(--line); }
+.btn-ghost:hover:not(:disabled) { background: var(--glass-strong); }
+.btn-ghost:disabled { opacity: .45; cursor: not-allowed; }
+.pill {
+  height: 32px; padding: 0 var(--s2);
+  font-size: var(--fs-sub); font-weight: var(--fw);
+  background: rgba(255,255,255,.45); color: var(--ink); border: 1px solid var(--line);
+}
+.pill:hover { background: var(--glass-strong); }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--white); border-color: var(--ink); font-weight: var(--fw-b); }
+.btn:focus-visible, .btn-ghost:focus-visible, .pill:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 24px; padding: 0 var(--s1);
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-sub); font-weight: var(--fw-b);
+  background: var(--wc-soft, var(--glass-strong)); color: var(--ink);
+  border: 1px solid var(--wc, var(--line-ink));
+  white-space: nowrap;
+}
+.num { font-variant-numeric: tabular-nums; }
+.sub { font-size: var(--fs-sub); color: var(--ink-2); }
+
+/* 앱 틀: 머리말 56px + 남은 높이 */
+#app { min-height: 100vh; }
+.app-root { display: flex; flex-direction: column; height: 100vh; }
+.app-header {
+  flex: 0 0 56px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s2);
+  width: 100%; max-width: var(--content-max); margin: 0 auto;
+  padding: 0 var(--s3);
+}
+.hdr-left, .hdr-right, .hdr-group, .hdr-views { display: flex; align-items: center; gap: var(--s1); }
+.hdr-left { gap: var(--s3); min-width: 0; }
+.hdr-right { gap: var(--s2); }
+.logo { display: flex; align-items: baseline; gap: var(--s1); white-space: nowrap; }
+.logo strong { font-size: 20px; color: var(--white); text-shadow: 0 1px 8px rgba(0,0,0,.25); }
+.logo .sub { color: rgba(255,255,255,.85); }
+.hdr-user { color: rgba(255,255,255,.9); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-header .btn, .app-header .btn-ghost { height: 36px; }
+.app-main {
+  flex: 1 1 auto; min-height: 0;
+  width: 100%; max-width: var(--content-max); margin: 0 auto;
+  padding: var(--s1) var(--s3) var(--s2);
+  display: flex; flex-direction: column;
+}
+[data-view] { flex: 1 1 auto; min-height: 0; min-width: 0; }
+
+/* 로그인 */
+.login-root { min-height: 100vh; }
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: var(--s3); }
+.login-card { width: 400px; max-width: 100%; display: flex; flex-direction: column; gap: var(--s2); padding: var(--s4); background: var(--glass-strong); }
+.login-title { font-size: var(--fs-title); line-height: 1.2; }
+.login-lead { margin-top: calc(var(--s1) * -1); }
+.login-roles, .login-grades { display: flex; gap: var(--s1); }
+.login-roles .pill { flex: 1; height: 40px; font-size: var(--fs-body); }
+.login-grades .pill { flex: 1; }
+.login-field { display: flex; flex-direction: column; gap: 4px; }
+.login-field input {
+  height: 44px; padding: 0 var(--s2);
+  border-radius: var(--radius-s); border: 1px solid var(--line-ink);
+  background: var(--white); font-size: var(--fs-body);
+}
+.login-field input:focus { outline: 2px solid var(--blue); outline-offset: 0; border-color: transparent; }
+.login-field input.is-invalid { border-color: var(--w-storm); }
+.login-error { font-size: var(--fs-sub); color: var(--w-storm); }
+.login-submit { height: 48px; width: 100%; margin-top: var(--s1); }
+.login-hint { text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
