@@ -2,7 +2,10 @@ import type { Store, Schedule, ScheduleType, Weather, WeekForecast, Recommendati
 import { recommendDates, SEMESTER, TYPE_LABEL, WEATHER_LABEL } from '../calc';
 
 /** 타임라인·마감 시뮬레이터 */
-const DAY = 12;
+const DAY = 16;
+const BAR_H = 24;
+const LANE = 28; // 막대 높이 + 단 간격 4px
+const PAD = 4;
 const WEEKS = 18;
 const DAYS = WEEKS * 7;
 const DAY_MS = 86400000;
@@ -53,6 +56,13 @@ function span(s: Schedule): [number, number] {
   return [Math.max(START, a), Math.min(END, b)];
 }
 
+/** 이름 글자 폭 추정(px, 12~13px 글꼴 기준) */
+function textW(t: string): number {
+  let w = 0;
+  for (const ch of t) w += /[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af\u4e00-\u9fff]/.test(ch) ? 13 : 7.5;
+  return Math.ceil(w);
+}
+
 function safe<T>(fn: () => T, fallback: T): T {
   try {
     return fn();
@@ -65,6 +75,8 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
   let selected: string | null = null;
   let lastFocus: string | null = null;
   let firstScroll = true;
+  let revealId: string | null = null;
+  const shown = (): boolean => el.getClientRects().length > 0 && el.offsetWidth > 0;
   let dragging = false;
   let pending = false;
   let toastTimer = 0;
@@ -119,7 +131,9 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     const sel = list.find((s) => s.id === selected) ?? null;
     recs = sel && !sel.fixed ? safe(() => recommendDates(st.schedules, sel).slice(0, 3), []) : [];
 
-    const prevScroll = el.querySelector<HTMLElement>('.tl-scroll')?.scrollLeft ?? 0;
+    const oldSc = el.querySelector<HTMLElement>('.tl-scroll');
+    const prevScroll = oldSc?.scrollLeft ?? 0;
+    const prevTop = oldSc?.scrollTop ?? 0;
 
     // 주 눈금
     let head = '';
@@ -148,31 +162,39 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     for (const row of ROWS) {
       const items = list.filter((s) => row.types.includes(s.type)).sort((a, b) => span(a)[0] - span(b)[0]);
       if (!items.length) continue;
+      // 막대 끝(px). 이름이 막대 밖에 쓰이면 그 폭까지 포함해 겹침을 계산한다.
       const laneEnds: number[] = [];
-      const placed: { s: Schedule; lane: number; a: number; b: number }[] = [];
+      const placed: { s: Schedule; lane: number; a: number; b: number; out: boolean }[] = [];
       for (const s of items) {
         const [a, b] = span(s);
-        let lane = laneEnds.findIndex((e) => e < a);
+        const w = Math.max(1, b - a + 1) * DAY;
+        const locked = !movable(s);
+        const nameW = textW(s.name);
+        const inner = nameW + 24 + (s.difficulty ? 34 : 0) + (locked ? 16 : 0) + (s.w !== s.defaultW ? 52 : 0);
+        const out = w < inner;
+        const x0 = (a - START) * DAY;
+        const x1 = x0 + w + (out ? nameW + 12 + (s.difficulty && w < 44 ? 34 : 0) : 0);
+        let lane = laneEnds.findIndex((e) => e + 2 <= x0);
         if (lane < 0) {
           lane = laneEnds.length;
-          laneEnds.push(b);
-        } else laneEnds[lane] = b;
-        placed.push({ s, lane, a, b });
+          laneEnds.push(x1);
+        } else laneEnds[lane] = x1;
+        placed.push({ s, lane, a, b, out });
       }
       const bars = placed
-        .map(({ s, lane, a, b }) => {
+        .map(({ s, lane, a, b, out }) => {
           const w = Math.max(1, b - a + 1) * DAY;
           const locked = !movable(s);
-          const cls = ['tl-bar', s.type === 'personal' ? 'is-personal' : '', s.fixed ? 'is-fixed' : '', locked && !s.fixed ? 'is-locked' : '', s.status === 'reported' ? 'is-reported' : '', s.id === selected ? 'is-selected' : '', movable(s) ? 'is-movable' : ''].join(' ');
+          const cls = ['tl-bar', out ? 'is-out' : '', s.type === 'personal' ? 'is-personal' : '', s.fixed ? 'is-fixed' : '', locked && !s.fixed ? 'is-locked' : '', s.status === 'reported' ? 'is-reported' : '', s.id === selected ? 'is-selected' : '', movable(s) ? 'is-movable' : ''].join(' ');
           const adj = s.w !== s.defaultW ? '<span class="tl-adj">무게 조정</span>' : '';
           return `<button type="button" class="${cls}" data-testid="bar-${esc(s.id)}" data-id="${esc(s.id)}" data-due="${s.due}" data-fixed="${s.fixed}" data-status="${s.status}" data-type="${s.type}"
-            style="left:${(a - START) * DAY}px;width:${w}px;top:${lane * 40 + 8}px" title="${esc(s.name)} · 마감 ${md(s.due)}">
-            ${locked ? LOCK : ''}<span class="tl-name">${esc(s.name)}</span>${s.difficulty ? `<span class="tl-dots">${DOTS[s.difficulty]}</span>` : ''}${adj}
+            style="left:${(a - START) * DAY}px;width:${w}px;top:${lane * LANE + PAD}px;height:${BAR_H}px" title="${esc(s.name)} · 마감 ${md(s.due)}">
+            ${locked && (!out || w >= 28) ? LOCK : ''}${s.difficulty && (!out || w >= 44) ? `<span class="tl-dots">${DOTS[s.difficulty]}</span>` : ''}<span class="tl-name">${s.difficulty && out && w < 44 ? `<span class="tl-dots">${DOTS[s.difficulty]}</span> ` : ''}${esc(s.name)}</span>${adj}
           </button>`;
         })
         .join('');
-      const h = laneEnds.length * 40 + 8;
-      rows += `<div class="tl-row" data-row="${row.key}" style="height:${h}px"><div class="tl-row-track" style="height:${h}px">${bars}</div></div>`;
+      const h = laneEnds.length * LANE + PAD;
+      rows += `<div class="tl-row" data-row="${row.key}" style="height:${h}px"><div class="tl-row-track" style="height:${h}px;width:${DAYS * DAY}px;background-size:${7 * DAY}px 100%">${bars}</div></div>`;
       labels += `<div class="tl-row-label" data-row="${row.key}" style="height:${h}px">${row.label}</div>`;
     }
     if (!rows) rows = `<div class="tl-empty sub">이 학년에는 아직 등록된 일정이 없어요.</div>`;
@@ -190,12 +212,14 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
       </div>
       <div class="tl-body">
         <div class="tl-frame glass">
-          <div class="tl-labels"><div class="tl-labels-head"></div>${labels}</div>
+          <div class="tl-labels"><div class="tl-labels-head"></div><div class="tl-labels-clip"><div class="tl-labels-inner">${labels}</div></div></div>
           <div class="tl-scroll-wrap">
             <div class="tl-scroll">
               <div class="tl-canvas" style="width:${DAYS * DAY}px">
-                <div class="tl-strip">${strip}<span class="tl-today-pill" style="left:${todayX}px">오늘 ${md(SEMESTER.today).replace(/\(.\)/, '')}</span></div>
-                <div class="tl-head"><div class="tl-head-track" style="width:${DAYS * DAY}px">${head}</div></div>
+                <div class="tl-sticky">
+                  <div class="tl-strip">${strip}<span class="tl-today-pill" style="left:${todayX}px">오늘 ${md(SEMESTER.today).replace(/\(.\)/, '')}</span></div>
+                  <div class="tl-head"><div class="tl-head-track" style="width:${DAYS * DAY}px">${head}</div></div>
+                </div>
                 <div class="tl-rows">${rows}</div>
                 <div class="tl-today" style="left:${todayX}px"></div>
               </div>
@@ -207,19 +231,53 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
       <div class="tl-toast glass" data-testid="tl-toast" role="status" aria-live="polite"></div>`;
 
     const sc = el.querySelector<HTMLElement>('.tl-scroll')!;
+    const inner = el.querySelector<HTMLElement>('.tl-labels-inner')!;
+    const syncLabels = (): void => {
+      inner.style.transform = `translateY(${-sc.scrollTop}px)`;
+    };
+    sc.addEventListener('scroll', syncLabels, { passive: true });
+    fit();
+    // 다시 그려도 스크롤 위치는 그대로
+    sc.scrollLeft = prevScroll;
+    sc.scrollTop = prevTop;
     const target = focusNow ? el.querySelector<HTMLElement>(`[data-id="${CSS.escape(focusNow)}"]`) : null;
     if (target) {
-      sc.scrollLeft = Math.max(0, target.offsetLeft - 200);
+      reveal(sc, target, true);
       firstScroll = false;
-    } else if (firstScroll && root.offsetParent !== null) {
+    } else if (firstScroll && shown()) {
       sc.scrollLeft = Math.max(0, todayX - 240);
       firstScroll = false;
-    } else if (firstScroll) {
-      // 아직 숨겨진 상태 — 보일 때 다시 맞춘다
-      sc.scrollLeft = Math.max(0, todayX - 240);
-      if (sc.scrollLeft > 0) firstScroll = false;
-    } else sc.scrollLeft = prevScroll;
+    }
+    if (revealId) {
+      const b = el.querySelector<HTMLElement>(`[data-id="${CSS.escape(revealId)}"]`);
+      if (b) reveal(sc, b, false);
+      revealId = null;
+    }
+    syncLabels();
   }
+
+  /** 막대가 스크롤 영역 안에 보이게(벗어났을 때만, nearest). 페이지는 움직이지 않는다. */
+  function reveal(sc: HTMLElement, bar: HTMLElement, center: boolean): void {
+    const r = sc.getBoundingClientRect();
+    const b = bar.getBoundingClientRect();
+    const stickyH = el.querySelector<HTMLElement>('.tl-sticky')?.offsetHeight ?? 0;
+    const left = b.left - r.left + sc.scrollLeft;
+    const top = b.top - r.top + sc.scrollTop;
+    if (center) sc.scrollLeft = Math.max(0, left - 200);
+    else if (b.left < r.left) sc.scrollLeft = Math.max(0, left - 24);
+    else if (b.right > r.left + sc.clientWidth) sc.scrollLeft = left + b.width - sc.clientWidth + 24;
+    if (b.top < r.top + stickyH) sc.scrollTop = Math.max(0, top - stickyH - PAD);
+    else if (b.bottom > r.top + sc.clientHeight) sc.scrollTop = top + b.height - sc.clientHeight + PAD;
+  }
+
+  /** 타임라인 보기를 화면 남은 높이에 맞춘다 */
+  function fit(): void {
+    if (!shown()) return;
+    const top = el.getBoundingClientRect().top + window.scrollY;
+    const h = `${Math.max(360, Math.floor(window.innerHeight - top))}px`;
+    if (el.style.height !== h) el.style.height = h;
+  }
+  window.addEventListener('resize', fit);
 
   function panel(s: Schedule, teacher: boolean): string {
     const canW = safe(() => store.can('editWeight'), false);
@@ -347,6 +405,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     clearDrop();
     if (!d.moved) {
       selected = d.id;
+      revealId = d.id; // 패널이 열려 폭이 줄어도 누른 막대가 보이게
       render();
       return;
     }
@@ -367,6 +426,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     pending = false;
     if (days === 0) return render();
     selected = d.id;
+    revealId = d.id;
     const before = store.getState().schedules;
     doMove(d.id, add(d.s.due, days));
     if (store.getState().schedules === before) render();
@@ -392,6 +452,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
   // 보기가 처음 보일 때 '오늘' 부근으로 스크롤
   const io = new IntersectionObserver((ents) => {
     if (ents.some((x) => x.isIntersecting) && firstScroll) {
+      fit();
       const sc = el.querySelector<HTMLElement>('.tl-scroll');
       if (sc) {
         sc.scrollLeft = Math.max(0, (toN(SEMESTER.today) - START) * DAY - 240);
