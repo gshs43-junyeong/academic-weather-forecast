@@ -11,11 +11,11 @@
 .tl-labels { display: flex; flex-direction: column; min-height: 0; background: transparent; border-right: 1px solid var(--line-ink); z-index: 3; }
 .tl-labels-clip { flex: 1; min-height: 0; overflow: hidden; }
 .tl-labels-inner { will-change: transform; }
-.tl-labels-head { flex: none; background: color-mix(in srgb, var(--white) 93%, transparent); backdrop-filter: blur(12px); height: 124px; box-sizing: border-box; border-bottom: 1px solid var(--line-ink); }
+.tl-labels-head { flex: none; background: #eceef2; backdrop-filter: blur(12px); height: 124px; box-sizing: border-box; border-bottom: 1px solid var(--line-ink); }
 .tl-scroll-wrap { position: relative; min-width: 0; min-height: 0; }
 .tl-scroll-wrap::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 14px; z-index: 6; pointer-events: none; background: linear-gradient(90deg, rgba(10,16,28,.12), rgba(10,16,28,0)); }
 .tl-scroll { height: 100%; overflow: auto; overscroll-behavior: contain; }
-.tl-sticky { position: sticky; top: 0; z-index: 7; background: color-mix(in srgb, var(--white) 93%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.tl-sticky { position: sticky; top: 0; z-index: 7; background: #eceef2; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .tl-strip { position: relative; height: 20px; box-sizing: border-box; }
 .tl-today-pill { position: absolute; top: 2px; transform: translateX(-50%); height: 16px; line-height: 16px; padding: 0 var(--s1); border-radius: var(--radius-pill); background: var(--ink); color: var(--white); font-size: 11px; font-weight: var(--fw-b); white-space: nowrap; z-index: 5; }
 .tl-canvas { position: relative; }
