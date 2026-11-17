@@ -37,13 +37,13 @@
 | 지적-⑧ README를 사이트 설명으로 | 통과 | 메인 작성(판정 대상 아님) · README.md |
 | 지적-⑨ 아이콘·배경·카드 조화(스크린샷 확인) | 통과 | inspector · 네 날씨 홈 스크린샷에서 카드 글자 또렷, 아이콘·카드 색조가 날씨와 맞음 · inspect-shots/fin-bg-clear-1440x900.png, fin-bg-storm-1280x720.png |
 | 추가-⑤ 체험 완료 코드 화면 | 통과 | inspector · 세 단계 전에는 코드 없음, 완료 시 맑음 아이콘·4자리 코드(1643)·문구, 같은 아이디 같은 코드 · inspect-shots/r2-bg-complete-1440.png |
-| 추가-⑥ 일정 검색(머리말 돋보기, "/" 키) | 미완 | |
-| 추가-⑦ 도움말·GitHub 오픈소스 링크·체험 초기화 | 미완 | |
-| 추가-⑧ 교사 고정/가능 설정(SPEC 1-1) | 미완 | |
-| 추가-⑨ 폭풍 완화 제안(주 상세, 교사) | 미완 | |
+| 추가-⑥ 일정 검색(머리말 돋보기, "/" 키) | 통과 | inspector · "/"로 열림, "생명" 4건, 전 학년 8건, Enter로 주 상세, 없는 낱말 안내, Esc · inspect-shots/fin2-search-1440.png |
+| 추가-⑦ 도움말·GitHub 오픈소스 링크·체험 초기화 | 통과 | inspector · 타이틀·도움말의 GitHub 링크(target=_blank, noopener), 계산 방식·무게표·출처·Pexels, 초기화 후 저장 내용 삭제·타이틀 복귀 · inspect-shots/fin2-about-1440.png |
+| 추가-⑧ 교사 고정/가능 설정(SPEC 1-1) | 통과 | inspector · fixed-toggle 후 자물쇠·드래그 거부, 다시 전환하면 이동, ←/→ 하루 이동, 학생에게는 없음 · inspect-shots/fin2-fixed-1440.png |
+| 추가-⑨ 폭풍 완화 제안(주 상세, 교사) | 통과 | inspector · "생명과학 자기평가서를 12/16(수)로 옮기면 R 1.87 → 1.28 · 비", 적용 후 카드 storm → rain, relief.test.ts 통과, 학생에게는 없음 · inspect-shots/fin2-relief-after-1440.png |
 | MVP4-① 개인 기상도 | 통과 | inspector · 체크 전 선택 일정 기여 0, 체크 후 13주 1.19 → 1.90 폭풍, pl-week 18칸이 store와 일치 · inspect-shots/r2-mvp4-planner-checked-1440x900.png |
 | MVP4-② 개인 과제 막대 | 통과 | inspector · 40시간 → w 10, L 12, 타임라인에 personal 막대 · inspect-shots/r2-mvp4-timeline-task-1440x900.png |
-| MVP4-③ 과제 드래그 재계산 | 미완(1회 실패, 수정 중) | 재계산 49ms·학교 일정 잠금은 충족, 드롭 후 가로 스크롤이 처음으로 돌아가 바뀐 주가 화면 밖 → timeline.ts 스크롤 유지 수정 중 |
+| MVP4-③ 과제 드래그 재계산 | 통과 | inspector 재판정(1회 실패 후 수정) · 놓은 뒤 49ms 안에 개인 R 변화, scrollLeft 861 → 861 유지, 막대와 배지 "비 → 폭풍"이 같은 화면, 학교 일정 잠금 · inspect-shots/fin2-mvp43-after-1440.png |
 | MVP4-④ D-n·경보·시작 순서 | 통과 | inspector · D-13(11/30 − 11/17), 경보 배너, 준비 일수 내림차순 · inspect-shots/r2-mvp4-planner-before-1440x900.png |
 | MVP5-① 학년 비교 | 통과 | inspector · 한 차트에 세 학년 선, 폭풍 주 수 4/3/3이 store와 일치, 이동 후 4 → 3 · inspect-shots/r2-mvp5-1440.png |
 | MVP5-② 4주 리포트 | 통과 | inspector · rp-week 4개가 store와 일치, 복사·인쇄(print 미디어에서 카드만) · inspect-shots/r2-mvp5-print.png |
@@ -69,6 +69,9 @@
 - 진행 중: 타임라인 2차 수정(worktree), 폭풍 완화 제안(calc/relief + 주 상세). 그다음: 타임라인에 고정/가능 전환·키보드 이동 → design-reviewer → 최종 inspector(데모 전체, 지적-①②⑨, 배경 영상 재판정, 추가-⑥~⑨, MVP4-③).
 
 - 20:56 최종 inspector(1): 데모 1~8단계, 배경 영상 재판정, 지적-①②⑨ 통과. 관찰: 주 상세는 Esc로 안 닫히고 [닫기]로만 닫힘 / 체험 완료는 3학년 11월 넷째 주 카드를 눌러야 3/3이 됨 / 1280×720에서 카드 아이콘이 작음.
+
+- 21:00 최종 inspector(2): MVP4-③ 재판정, 추가-⑥~⑨ 통과. 회귀(MVP1-③, MVP2-②③④⑤, MVP3-①②③, MVP4-①②④, MVP5-①②, 지적-③) 모두 통과. 외부 요청 0건, 페이지 오류 0건, 1280×720 모든 보기 스크롤 없음. 테스트 79개·tsc·빌드 통과.
+- 21:00 마지막 작은 수정 진행 중: 학생 타임라인에서 개인 과제 줄을 맨 위로(1280×720에서 세로 스크롤 없이 보이게). 이후 새 작업 없음.
 
 ## 막힘
 
