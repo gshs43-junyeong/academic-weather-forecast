@@ -1,5 +1,6 @@
 import type { AppState, Contribution, GradeForecast, Store, Weather, WeekForecast } from '../types';
 import { WEATHER_LABEL } from '../calc/index';
+import { reliefHtml } from './home-relief';
 
 /** 홈(히어로·18주 그리드·달력·날씨 띠)과 주 상세 */
 
@@ -212,7 +213,7 @@ function detailHtml(store: Store, wk: WeekForecast): string {
     </div>
     <div class="detail-body">
       <section class="detail-days"><h3 class="detail-h">일별 부하</h3><div class="day-bars">${bars}</div></section>
-      <section class="detail-contrib"><h3 class="detail-h">원인 분해</h3>${contribHtml(store, wk)}</section>
+      <section class="detail-contrib"><h3 class="detail-h">원인 분해</h3>${contribHtml(store, wk)}${reliefHtml(store, wk)}</section>
     </div>
   </div>`;
 }
@@ -275,6 +276,8 @@ export function mountHome(root: HTMLElement, store: Store): void {
     if (t.closest('[data-testid="detail-close"]')) { store.closeDetail(); return; }
     const mv = t.closest<HTMLElement>('[data-testid="move-this"]');
     if (mv) { store.setView('timeline', mv.dataset.id ?? null); return; }
+    const ra = t.closest<HTMLElement>('[data-testid^="relief-apply-"]');
+    if (ra) { if (ra.dataset.id && ra.dataset.to) store.move(ra.dataset.id, ra.dataset.to); return; }
     const wkEl = t.closest<HTMLElement>('[data-week]');
     if (wkEl) {
       const idx = Number(wkEl.dataset.week);

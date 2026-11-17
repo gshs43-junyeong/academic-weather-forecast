@@ -186,3 +186,13 @@
 /* 번개 시점: storm.webp 실측(75프레임, 한 바퀴 2,960ms, 번개 1,760~1,880ms·2,040~2,160ms)에 맞춘 값이다 */
 /* 안내 글자는 영상 위에 바로 올리지 않고 유리 알약 안에 둔다(SPEC 5-3) */
 .home-toolbar > .sub { background: var(--glass-strong); color: var(--ink-2); padding: 4px 12px; border-radius: var(--radius-pill); border: 1px solid var(--line); }
+
+/* 폭풍 완화 제안(교사, 원인 분해 아래) */
+.relief { flex: 0 1 auto; min-height: 64px; margin-top: var(--s1); padding-top: var(--s1); border-top: 1px solid var(--line-ink); overflow-y: auto; }
+.detail-contrib:has(.relief) .contrib-list { min-height: 84px; }
+.relief-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--s1); }
+.relief-item { display: flex; align-items: center; gap: var(--s1); font-size: var(--fs-sub); }
+.relief-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--wc); flex: none; }
+.relief-text { flex: 1; min-width: 0; }
+.relief-apply { cursor: pointer; flex: none; padding: 4px var(--s2); border-radius: var(--radius-pill); border: 0; background: var(--blue); color: var(--blue-ink) !important; font-size: var(--fs-sub); }
+.relief-empty { font-size: var(--fs-sub); }
