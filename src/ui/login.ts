@@ -91,7 +91,7 @@ export function mountLogin(root: HTMLElement, store: Store, onBack?: () => void)
     const res = store.tryLogin({ role, grade, userId });
     if (!res.ok) {
       const b = ROLE_LABEL[res.boundRole];
-      err.textContent = `이 아이디는 ${b} 계정이에요. ${b}으로 로그인해 주세요.`;
+      err.textContent = `이 아이디는 ${b} 계정이에요. ${b === '교사' ? '교사로' : '학생으로'} 로그인해 주세요.`;
       err.hidden = false;
       idInput.classList.add('is-invalid');
       idInput.focus();
