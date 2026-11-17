@@ -1,0 +1,19 @@
+/* 디자인 변수(한 곳). SPEC 4장. 모든 화면이 이 값만 참조한다. */
+:root {
+  --w-sunny: #e8a81c;  --w-sunny-soft: #fbeec6;
+  --w-cloudy: #7d8794; --w-cloudy-soft: #e3e7ec;
+  --w-rain: #e8762c;   --w-rain-soft: #fbdcc6;
+  --w-storm: #d92d2d;  --w-storm-soft: #f9d0d0; --w-storm-deep: #5a0f14;
+  --ink: #14181f; --ink-2: #4a5360; --ink-3: #7a8494;
+  --white: #ffffff; --line: rgba(255,255,255,.7); --line-ink: rgba(20,24,31,.12);
+  --blue: #2563eb; --blue-ink: #ffffff;
+  --glass: rgba(255,255,255,.7); --glass-strong: rgba(255,255,255,.86);
+  --radius: 20px; --radius-s: 12px; --radius-pill: 999px;
+  --shadow: 0 16px 48px rgba(10,16,28,.18); --shadow-lift: 0 24px 56px rgba(10,16,28,.28);
+  --s1: 8px; --s2: 16px; --s3: 24px; --s4: 32px; --s5: 40px;
+  --fs-hero: 56px; --fs-title: 28px; --fs-num: 20px; --fs-body: 15px; --fs-sub: 13px;
+  --fw: 400; --fw-b: 700;
+  --ease: cubic-bezier(.2,.8,.2,1); --dur: .3s;
+  --font: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+  --content-max: 1600px;
+}
