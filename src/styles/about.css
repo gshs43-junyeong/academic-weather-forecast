@@ -7,7 +7,7 @@
   transition: background var(--dur) var(--ease);
 }
 .ab-open:hover { background: var(--glass-strong); }
-.ab-open:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.ab-open:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 .ab-footer {
   position: fixed; left: 50%; bottom: var(--s3); transform: translateX(-50%); z-index: 50;

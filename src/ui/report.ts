@@ -32,7 +32,7 @@ function chartSvg(fcs: GradeForecast[], todayIdx: number): string {
     if (String(m) !== lastMonth) { lastMonth = String(m); s += `<text x="${x(i)}" y="${T + ph + 32}" text-anchor="middle" class="cmp-month">${m}월</text>`; }
   });
   if (todayIdx >= 0) {
-    s += `<line x1="${x(todayIdx)}" x2="${x(todayIdx)}" y1="${T}" y2="${T + ph}" stroke="var(--blue)" stroke-width="2"/>`;
+    s += `<line x1="${x(todayIdx)}" x2="${x(todayIdx)}" y1="${T}" y2="${T + ph}" stroke="var(--ink)" stroke-width="1.5"/>`;
     s += `<text x="${x(todayIdx) + 4}" y="${T + 12}" class="cmp-today">오늘</text>`;
   }
   const ends: { g: Grade; yy: number }[] = [];

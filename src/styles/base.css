@@ -43,10 +43,10 @@ body > #app { position: relative; z-index: 1; }
 #app { position: relative; z-index: 1; }
 
 /* 날씨 색 도우미: 다른 담당은 var(--wc), var(--wc-soft)만 쓴다 */
-[data-weather="sunny"] { --wc: var(--w-sunny); --wc-soft: var(--w-sunny-soft); }
-[data-weather="cloudy"] { --wc: var(--w-cloudy); --wc-soft: var(--w-cloudy-soft); }
-[data-weather="rain"] { --wc: var(--w-rain); --wc-soft: var(--w-rain-soft); }
-[data-weather="storm"] { --wc: var(--w-storm); --wc-soft: var(--w-storm-soft); }
+[data-weather="sunny"] { --wc: var(--w-sunny); --wc-soft: var(--w-sunny-soft); --wc-text: var(--w-sunny-ink); }
+[data-weather="cloudy"] { --wc: var(--w-cloudy); --wc-soft: var(--w-cloudy-soft); --wc-text: var(--ink-2); }
+[data-weather="rain"] { --wc: var(--w-rain); --wc-soft: var(--w-rain-soft); --wc-text: var(--w-rain); }
+[data-weather="storm"] { --wc: var(--w-storm); --wc-soft: var(--w-storm-soft); --wc-text: var(--w-storm); }
 
 /* 공용 부품 */
 .glass {
@@ -160,6 +160,18 @@ body > #app { position: relative; z-index: 1; }
 }
 .role-label[data-role="teacher"] { background: var(--ink); color: var(--white); border-color: var(--ink); }
 .hdr-views .pill { white-space: nowrap; }
+/* 머리말(어두운 유리 띠) 안의 버튼: 투명 바탕 + 흰 글자, 선택은 흰 바탕 + 진한 글자 */
+.app-header .pill, .app-header .btn-ghost, .app-header .complete-chip .cc-count {
+  background: transparent; color: rgba(255,255,255,.92); border: 1px solid rgba(255,255,255,.35);
+}
+.app-header .pill:hover, .app-header .btn-ghost:hover:not(:disabled), .app-header .complete-chip .cc-count:hover { background: rgba(255,255,255,.14); }
+.app-header .pill[aria-pressed="true"], .app-header .pill[aria-current]:not([aria-current="false"]) {
+  background: var(--white); color: var(--ink); border-color: var(--white);
+}
+.app-header .complete-chip { color: rgba(255,255,255,.92); }
+.app-header [data-testid="about-open"] { background: transparent; color: rgba(255,255,255,.92); border: 1px solid rgba(255,255,255,.35); }
+.app-header .role-label, .app-header .role-label[data-role="teacher"] { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,.35); }
+.app-header .hdr-user { color: var(--white); }
 
 /* 타이틀 화면 */
 .title-root { min-height: 100vh; }

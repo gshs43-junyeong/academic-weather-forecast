@@ -12,7 +12,7 @@
 .cmp-band { font-size: 11px; fill: var(--ink-2); }
 .cmp-tick { font-size: 11px; fill: var(--ink-3); }
 .cmp-month { font-size: 11px; fill: var(--ink-2); font-weight: var(--fw-b); }
-.cmp-today { font-size: 11px; fill: var(--blue); font-weight: var(--fw-b); }
+.cmp-today { font-size: 11px; fill: var(--ink); font-weight: var(--fw-b); }
 .cmp-end { font-size: 12px; font-weight: var(--fw-b); }
 
 /* 날씨 띠: 차트 플롯 영역(viewBox 40~536 / 600)과 같은 시간축 */
@@ -22,7 +22,7 @@
 .cmp-strip.is-sel .cmp-strip-label { color: var(--ink); font-weight: var(--fw-b); }
 .cmp-cells { display: grid; grid-template-columns: repeat(18, 1fr); gap: 2px; }
 .cmp-cell { height: 16px; border-radius: 4px; background: var(--wc); }
-.cmp-cell.is-today { outline: 2px solid var(--blue); outline-offset: 1px; }
+.cmp-cell.is-today { outline: 2px solid var(--ink); outline-offset: 1px; }
 
 .cmp-counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s1); margin-top: var(--s2); }
 .cmp-count { display: flex; align-items: baseline; gap: 4px; padding: var(--s1) var(--s2); border-radius: var(--radius-s); border: 1px solid var(--line-ink); font-size: var(--fs-sub); color: var(--ink-2); }

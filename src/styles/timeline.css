@@ -53,7 +53,7 @@
 .tl-bar.is-out .tl-name { position: absolute; left: calc(100% + 4px); top: 50%; transform: translateY(-50%); overflow: visible; font-weight: var(--fw-b); color: var(--ink); }
 .tl-bar.is-fixed { border-color: var(--ink-3); background: repeating-linear-gradient(45deg, var(--w-cloudy-soft) 0 6px, var(--glass-strong) 6px 12px); }
 .tl-bar.is-reported { border-style: dashed; }
-.tl-bar.is-selected { box-shadow: 0 0 0 3px var(--w-sunny); }
+.tl-bar.is-selected { box-shadow: 0 0 0 3px var(--ink); }
 .tl-bar.is-dragging { z-index: 5; cursor: grabbing; box-shadow: var(--shadow-lift); transition: box-shadow var(--dur) var(--ease); scale: 1.06; }
 .tl-bar:focus { outline: none; }
 .tl-bar:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; z-index: 4; }

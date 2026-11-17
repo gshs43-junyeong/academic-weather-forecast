@@ -6,7 +6,7 @@
 .search-bar { display: flex; align-items: center; gap: var(--s1); }
 .search-ico { display: inline-flex; color: var(--ink-2); }
 .search-input { flex: 1; min-width: 0; height: 40px; border: 1px solid var(--line-ink); border-radius: var(--radius-s); padding: 0 var(--s1); font: inherit; font-size: var(--fs-body); font-weight: var(--fw); color: var(--ink); background: var(--white); }
-.search-input:focus { outline: 2px solid var(--blue); outline-offset: 0; }
+.search-input:focus { outline: 2px solid var(--ink); outline-offset: 0; }
 .search-grades, .search-close { flex: none; white-space: nowrap; }
 .search-head { padding: 0 var(--s1); min-height: 16px; }
 .search-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--s1); }

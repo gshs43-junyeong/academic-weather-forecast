@@ -112,12 +112,12 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
           <div data-testid="preview-warning" class="rg-warn" hidden></div>
           <div data-testid="preview-top3" class="rg-top3" hidden></div>
         </div>
-        <footer class="rg-foot">
-          <p class="sub rg-save-hint" data-testid="save-hint"></p>
-          <button type="button" class="btn" data-testid="save-btn" disabled>${teacher ? '등록' : '제보'}</button>
-        </footer>
       </section>
     </div>
+    <footer class="rg-foot">
+      <p class="sub rg-save-hint" data-testid="save-hint"></p>
+      <button type="button" class="btn" data-testid="save-btn" disabled>${teacher ? '등록' : '제보'}</button>
+    </footer>
   </div>`;
   document.body.appendChild(overlay);
 

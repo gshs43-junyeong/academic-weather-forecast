@@ -93,4 +93,6 @@ mark.ev[data-field="grades"], mark.ev[data-field="internal"], mark.ev[data-field
 .rg-wreset { flex: none; font: inherit; font-size: var(--fs-sub); padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--glass); color: var(--ink); cursor: pointer; white-space: nowrap; }
 .rg-wreset[hidden] { display: none; }
 .rg-wreset:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-.rg-foot { position: sticky; bottom: calc(-1 * var(--s3)); z-index: 2; background: var(--glass-strong); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-block: var(--s1); }
+.rg-head { flex: none; }
+.rg-body { flex: 1 1 auto; }
+.rg-foot { position: static; flex: none; background: var(--glass-strong); padding: var(--s1) var(--s3); border-top: 1px solid var(--line-ink); }
