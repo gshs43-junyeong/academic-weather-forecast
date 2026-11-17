@@ -7,22 +7,22 @@
 .tl-actions .btn[disabled] { opacity: .4; cursor: default; }
 
 .tl-body { flex: 1; min-height: 0; display: flex; gap: var(--s2); align-items: stretch; }
-.tl-frame { flex: 1; min-width: 760px; min-height: 0; display: grid; grid-template-columns: 120px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); border-radius: var(--radius); overflow: hidden; }
+.tl-frame { flex: 1; min-width: 760px; min-height: 0; display: grid; grid-template-columns: 136px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); border-radius: var(--radius); overflow: hidden; }
 .tl-labels { display: flex; flex-direction: column; min-height: 0; background: transparent; border-right: 1px solid var(--line-ink); z-index: 3; }
 .tl-labels-clip { flex: 1; min-height: 0; overflow: hidden; }
 .tl-labels-inner { will-change: transform; }
-.tl-labels-head { flex: none; background: rgba(255,255,255,.97); height: 124px; box-sizing: border-box; border-bottom: 1px solid var(--line-ink); }
+.tl-labels-head { flex: none; background: color-mix(in srgb, var(--white) 93%, transparent); backdrop-filter: blur(12px); height: 124px; box-sizing: border-box; border-bottom: 1px solid var(--line-ink); }
 .tl-scroll-wrap { position: relative; min-width: 0; min-height: 0; }
 .tl-scroll-wrap::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 14px; z-index: 6; pointer-events: none; background: linear-gradient(90deg, rgba(10,16,28,.12), rgba(10,16,28,0)); }
 .tl-scroll { height: 100%; overflow: auto; overscroll-behavior: contain; }
-.tl-sticky { position: sticky; top: 0; z-index: 7; background: rgba(255,255,255,.97); backdrop-filter: blur(8px); }
+.tl-sticky { position: sticky; top: 0; z-index: 7; background: color-mix(in srgb, var(--white) 93%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .tl-strip { position: relative; height: 20px; box-sizing: border-box; }
 .tl-today-pill { position: absolute; top: 2px; transform: translateX(-50%); height: 16px; line-height: 16px; padding: 0 var(--s1); border-radius: var(--radius-pill); background: var(--ink); color: var(--white); font-size: 11px; font-weight: var(--fw-b); white-space: nowrap; z-index: 5; }
 .tl-canvas { position: relative; }
 
 .tl-head { display: flex; position: relative; height: 104px; box-sizing: border-box; border-bottom: 1px solid var(--line-ink); }
 .tl-head-track { position: relative; height: 100%; }
-.tl-row-label { flex: 0 0 120px; width: 120px; flex: none; padding: var(--s1) var(--s2); font-size: var(--fs-sub); font-weight: var(--fw-b); color: var(--ink-2); background: transparent; box-sizing: border-box; border-bottom: 1px solid var(--line-ink); }
+.tl-row-label { width: 136px; flex: none; white-space: normal; word-break: keep-all; font-size: 13px; line-height: 1.3; padding: var(--s1) var(--s2); font-size: var(--fs-sub); font-weight: var(--fw-b); color: var(--ink-2); background: transparent; box-sizing: border-box; border-bottom: 1px solid var(--line-ink); }
 .tl-week { position: absolute; top: 0; bottom: 0; box-sizing: border-box; padding: var(--s1) 4px; border-left: 1px solid var(--line-ink); display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-sub); transition: background var(--dur) var(--ease); }
 .tl-week::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--wc); }
 .tl-week.is-drop { background: var(--wc-soft); box-shadow: inset 0 0 0 2px var(--wc); }
@@ -66,7 +66,8 @@
 .tl-adj { flex: none; font-size: 11px; font-weight: var(--fw-b); color: var(--ink-2); }
 
 .tl-panel { flex: 0 0 320px; max-height: 100%; overflow-y: auto; overscroll-behavior: contain; padding: var(--s3); border-radius: var(--radius); display: flex; flex-direction: column; gap: var(--s2); box-sizing: border-box; }
-.tl-panel h3 { margin: 0; font-size: var(--fs-num); font-weight: var(--fw-b); }
+.tl-panel h3 { margin: 0; flex: 1; min-width: 0; font-size: 20px; line-height: 1.3; font-weight: var(--fw-b); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: keep-all; }
+.tl-panel-head .tl-close { flex: none; align-self: flex-start; }
 .tl-panel h4 { margin: 0 0 var(--s1); font-size: var(--fs-body); font-weight: var(--fw-b); }
 .tl-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s1); }
 .tl-dl { display: grid; grid-template-columns: auto 1fr; gap: var(--s1) var(--s2); margin: 0; font-size: var(--fs-sub); }
