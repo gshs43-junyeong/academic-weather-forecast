@@ -12,17 +12,17 @@
 | MVP1-③ 상세 그래프·기여 합 = W | 미완 | |
 | MVP1-④ 계산 예시 W 8.04·R 1.79·폭풍 | 미완 | |
 | MVP1-⑤ 폭풍 빨간 테두리·번쩍임 | 미완 | |
-| MVP2-① 교사 모드 타임라인 | 통과 | inspector 20:05 · 막대 34개, 학생 드래그 시 data-due 불변 · inspect-shots/mvp2-1-student-1440.png |
+| MVP2-① 교사 모드 타임라인 | 통과 | inspector 20:04 · 막대 34개, 학생 드래그 시 data-due 불변 · inspect-shots/mvp2-1-student-1440.png |
 | MVP2-② 드래그 재계산·전후 배지 | 통과 | inspector · g1-self-bio 12/23→12/15 드래그, 17주 폭풍→비 배지, 반영 66ms · inspect-shots/mvp2-2-drag-1440.png |
 | MVP2-③ 고정 일정 잠금 | 통과 | inspector · 테스트 6 고정 일정 이동 거부, g1-rne-final 자물쇠·드래그 불변 · inspect-shots/mvp2-3-fixed-1440.png |
 | MVP2-④ TOP 3 추천 | 통과 | inspector(SPEC 2-2 기준) · 12/30 R 1.45 비, 12/16 1.79, 12/9 2.48 · inspect-shots/mvp2-4-top3-1440.png |
 | MVP2-⑤ 되돌리기·초기화 | 통과 | inspector · 직전 이동 하나 복원, 초기화 후 18주 R 처음 값 · inspect-shots/mvp2-5-undo-reset-1440.png |
-| MVP3-① 공지문 1초 해석·근거 밑줄 | 미완 | |
-| MVP3-② 빈 칸 안내·빨간 테두리·저장 비활성 | 미완 | |
-| MVP3-③ 제보/확정 반영·저장 전 날씨 미리보기·폭풍 경고·추천 | 미완 | |
-| MVP3-④ 샘플 3개 정답 일치 | 미완 | |
-| MVP3-⑤ 외부 요청 0건 | 미완 | |
-| 추가-① 로그인 카드(아이디·비밀번호 미리 입력, 학생/교사) | 미완 | |
+| MVP3-① 공지문 1초 해석·근거 밑줄 | 통과 | inspector · 샘플 3개 212~348ms 안에 칸 채움, mark.ev 밑줄 · inspect-shots/mvp3-sample0-1440x900.png |
+| MVP3-② 빈 칸 안내·빨간 테두리·저장 비활성 | 미완(1회 실패, 수정 중) | 학기 밖 날짜 칸 테두리가 회색으로 계산됨(register.css 우선순위) |
+| MVP3-③ 제보/확정 반영·저장 전 날씨 미리보기·폭풍 경고·추천 | 미완(1회 실패, 수정 중) | 추천 목록이 "맑은 날"·날짜 표기 → "맑은 주 TOP 3" 주 단위 표기로 수정 중 |
+| MVP3-④ 샘플 3개 정답 일치 | 통과 | inspector · parser.test.ts "모든 칸이 정답과 같다" 샘플 3개(38개 통과) |
+| MVP3-⑤ 외부 요청 0건 | 통과 | inspector · 해석 전후·세션 전체 localhost 외 요청 0건 |
+| 추가-① 로그인 카드(아이디·비밀번호 미리 입력, 학생/교사) | 통과 | inspector · student01·가려진 비밀번호 미리 입력, 임의 아이디 로그인, 나가기 · inspect-shots/mvp3-login-1440x900.png |
 | 추가-② 일 단위 달력 | 미완 | |
 | 추가-③ 생명과학 수행 11/20 어려움(1학년) | 미완 | |
 | 추가-④ 교사 무게 직접 수정 | 통과 | inspector · 무게 9 저장 시 R 1.87→4.05, 무게 조정 표시, 범위 밖 거부, 학생 비활성 · inspect-shots/mvp2-w-adjust-1440.png |
@@ -39,7 +39,7 @@
 ## 진행 메모 (메인이 바뀌어도 이어 가기 위한 상태)
 - 19:51 키트 풀기·Vite+TS 구성·공용 계약(src/types.ts, CONTRACT.md)·첫 푸시.
 - 20:02 7개 모듈 구현·main 푸시 완료(테스트 67개·빌드 통과). 20:03 data-designer 데모 조건 전부 통과(1학년 14주 2.36·17주 1.87 폭풍, 이동 후 1.28 비, 대수 자평 1.80 폭풍·추천 1순위 12/30 1.39 비, 3학년 13주 2.62 폭풍, 일정 107개).
-- 20:05 MVP2 inspector 전부 통과. MVP1·MVP3 inspector 판정 대기 중.
+- 20:04 MVP2 inspector 전부 통과. 20:05 MVP3 inspector: ①④⑤·추가-① 통과, ②③ 실패 → 등록 창 수정 에이전트 실행 중, 끝나면 ②③ 재판정. MVP1 inspector 판정 대기 중.
 - 스크린샷은 inspect-shots/(git 제외)에 있다.
 
 ## 막힘
