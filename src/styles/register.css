@@ -1,1 +1,89 @@
-/* register */
+/* register — 일정 등록 창 */
+.rg-overlay {
+  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 24, 31, .45); padding: var(--s3); font-family: var(--font); color: var(--ink);
+}
+.rg-modal {
+  width: min(1240px, 100%); max-height: calc(100vh - 48px); display: flex; flex-direction: column;
+  background: var(--glass-strong); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); backdrop-filter: blur(16px); overflow: hidden;
+}
+.rg-head { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line-ink); }
+.rg-head h2 { margin: 0; font-size: var(--fs-title); font-weight: var(--fw-b); }
+.rg-close { margin-left: auto; }
+.rg-body { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); padding: var(--s3); overflow: auto; min-height: 0; }
+.rg-left, .rg-right { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
+.rg-label, .rg-flabel, .rg-f > label { font-size: var(--fs-sub); font-weight: var(--fw-b); color: var(--ink-2); }
+.rg-notice {
+  width: 100%; min-height: 160px; resize: vertical; box-sizing: border-box; padding: var(--s2);
+  font: var(--fw) var(--fs-body)/1.6 var(--font); color: var(--ink);
+  background: var(--white); border: 1px solid var(--line-ink); border-radius: var(--radius-s);
+}
+.rg-row { display: flex; align-items: center; gap: var(--s2); }
+.rg-count { margin-left: auto; }
+.rg-samples { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1); }
+.rg-sample { cursor: pointer; font: var(--fw) var(--fs-sub) var(--font); }
+.rg-preview-text {
+  flex: 1; min-height: 120px; padding: var(--s2); white-space: pre-wrap; overflow: auto;
+  font-size: var(--fs-body); line-height: 1.8; background: var(--glass); border: 1px solid var(--line-ink); border-radius: var(--radius-s);
+}
+.rg-preview-text:empty::before { content: '해석하면 근거가 여기에 밑줄로 보여요.'; color: var(--ink-3); font-size: var(--fs-sub); }
+mark.ev { --ev: var(--w-cloudy); --ev-soft: var(--w-cloudy-soft); background: var(--ev-soft); color: inherit; border-bottom: 3px solid var(--ev); border-radius: 2px; padding: 0 2px; }
+mark.ev[data-field="due"], mark.ev[data-field="difficulty"] { --ev: var(--w-rain); --ev-soft: var(--w-rain-soft); }
+mark.ev[data-field="type"], mark.ev[data-field="subject"], mark.ev[data-field="name"] { --ev: var(--w-sunny); --ev-soft: var(--w-sunny-soft); }
+mark.ev[data-field="grades"], mark.ev[data-field="internal"], mark.ev[data-field="p"], mark.ev[data-field="fixed"] { --ev: var(--w-cloudy); --ev-soft: var(--w-cloudy-soft); }
+
+.rg-form { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s1) var(--s2); }
+.rg-f { display: flex; flex-direction: column; gap: var(--s1); min-width: 0; }
+.rg-wide { grid-column: 1 / -1; }
+.rg-f input[type="text"], .rg-f input[type="date"], .rg-f input[type="number"], .rg-f select {
+  height: 40px; box-sizing: border-box; padding: 0 var(--s1); font: var(--fw) var(--fs-body) var(--font); color: var(--ink);
+  background: var(--white); border: 1px solid var(--line-ink); border-radius: var(--radius-s);
+}
+.rg-f input:disabled, .rg-f select:disabled, .rg-f input[readonly] { background: var(--glass); color: var(--ink-3); }
+.rg-checks { display: flex; gap: var(--s2); align-items: center; min-height: 40px; font-size: var(--fs-body); }
+.rg-checks.is-invalid { outline: 2px solid var(--w-storm); outline-offset: 2px; border-radius: var(--radius-s); }
+.rg-f .is-invalid { border: 2px solid var(--w-storm); }
+.rg-hint { margin: 0; min-height: 16px; font-size: var(--fs-sub); color: var(--ink-2); }
+.rg-ro { margin: 0; height: 40px; display: flex; align-items: center; font-size: var(--fs-body); color: var(--ink-2); }
+.num { font-variant-numeric: tabular-nums; }
+
+.rg-pv { display: flex; flex-direction: column; gap: var(--s1); padding: var(--s2); background: var(--glass); border: 1px solid var(--line-ink); border-radius: var(--radius-s); }
+.rg-pv h3 { margin: 0; font-size: var(--fs-body); font-weight: var(--fw-b); }
+.rg-pv-weeks { display: flex; flex-direction: column; gap: var(--s1); }
+.rg-pv-weeks .sub, .rg-top3 .sub { margin: 0; font-size: var(--fs-sub); color: var(--ink-2); }
+.rg-pv-week {
+  display: flex; align-items: center; gap: var(--s2); padding: var(--s1) var(--s2); font-size: var(--fs-sub);
+  border-left: 4px solid var(--wc, var(--w-cloudy)); background: var(--wc-soft, var(--white)); border-radius: var(--radius-s);
+}
+.rg-pv-wk { font-weight: var(--fw-b); min-width: 112px; }
+.rg-pv-chg { display: flex; align-items: center; gap: var(--s1); flex: 1; }
+.rg-pv-chg b { font-weight: var(--fw-b); }
+.rg-ic { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; }
+.rg-warn {
+  display: flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s2); font-size: var(--fs-body); font-weight: var(--fw-b);
+  color: var(--w-storm-deep); background: var(--w-storm-soft); border: 2px solid var(--w-storm); border-radius: var(--radius-s);
+}
+.rg-warn[hidden], .rg-top3[hidden] { display: none; }
+.rg-top3 { display: flex; flex-direction: column; gap: var(--s1); }
+.rg-top-title { margin: 0; font-size: var(--fs-sub); font-weight: var(--fw-b); color: var(--ink-2); }
+.rg-top-item {
+  display: flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s2); font-size: var(--fs-sub);
+  background: var(--white); border-left: 4px solid var(--wc, var(--w-sunny)); border-radius: var(--radius-s);
+}
+.rg-top-item > span { flex: 1; }
+.rg-use { padding: 0 var(--s2); height: 32px; font-size: var(--fs-sub); }
+
+.rg-foot { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); }
+.rg-save-hint { margin: 0; font-size: var(--fs-sub); color: var(--ink-2); }
+.rg-save-hint.is-ready { color: var(--ink-3); }
+[data-testid="save-btn"]:disabled { opacity: .45; cursor: not-allowed; }
+
+.rg-toast {
+  position: fixed; left: 50%; bottom: var(--s4); transform: translateX(-50%); z-index: 110;
+  padding: var(--s2) var(--s3); font: var(--fw-b) var(--fs-body) var(--font); color: var(--ink);
+  background: var(--glass-strong); border: 1px solid var(--line); border-radius: var(--radius-pill); box-shadow: var(--shadow);
+  transition: opacity var(--dur) var(--ease);
+}
+.rg-toast.is-out { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .rg-toast { transition: none; } }
