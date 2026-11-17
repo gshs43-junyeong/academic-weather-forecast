@@ -1,6 +1,7 @@
 /* 디자인 변수(한 곳). SPEC 4장. 모든 화면이 이 값만 참조한다. */
 :root {
   --w-sunny: #e8a81c;  --w-sunny-soft: #fbeec6;
+  --w-sunny-ink: #7a5200; /* 맑음 글자용(금빛은 밝은 카드 위에서 대비가 낮아 글자에는 이 값을 쓴다) */
   --w-cloudy: #7d8794; --w-cloudy-soft: #e3e7ec;
   --w-rain: #e8762c;   --w-rain-soft: #fbdcc6;
   --w-storm: #d92d2d;  --w-storm-soft: #f9d0d0; --w-storm-deep: #5a0f14;
