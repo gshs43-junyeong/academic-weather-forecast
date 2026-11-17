@@ -56,7 +56,7 @@ function renderChecks(st: AppState): string {
           return `<div class="pl-group"><div class="pl-group-title">${esc(TYPE_LABEL[t])}</div>${items
             .map((s) => {
               const checked = st.personalChecked.includes(s.id);
-              return `<label class="pl-check${checked ? ' is-on' : ''}"><input type="checkbox" data-testid="pl-check-${esc(s.id)}" data-id="${esc(s.id)}"${checked ? ' checked' : ''}><span class="pl-check-name">${esc(s.name)}</span><span class="pl-check-date sub num">${md(s.eventDate ?? s.due)}</span></label>`;
+              return `<label class="pl-check${checked ? ' is-on' : ''}"><input type="checkbox" data-testid="pl-check-${esc(s.id)}" data-id="${esc(s.id)}"${checked ? ' checked' : ''}><span class="pl-check-name" title="${esc(s.name)}">${esc(s.name)}</span><span class="pl-check-date sub num">${md(s.eventDate ?? s.due)}</span></label>`;
             })
             .join('')}</div>`;
         })
