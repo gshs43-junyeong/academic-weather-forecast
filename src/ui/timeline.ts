@@ -134,6 +134,8 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     const oldSc = el.querySelector<HTMLElement>('.tl-scroll');
     const prevScroll = oldSc?.scrollLeft ?? 0;
     const prevTop = oldSc?.scrollTop ?? 0;
+    const act = document.activeElement as HTMLElement | null;
+    const focusBar = act && el.contains(act) && act.classList.contains('tl-bar') ? act.dataset.id ?? null : null;
 
     // 주 눈금
     let head = '';
@@ -187,7 +189,9 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
           const locked = !movable(s);
           const cls = ['tl-bar', out ? 'is-out' : '', s.type === 'personal' ? 'is-personal' : '', s.fixed ? 'is-fixed' : '', locked && !s.fixed ? 'is-locked' : '', s.status === 'reported' ? 'is-reported' : '', s.id === selected ? 'is-selected' : '', movable(s) ? 'is-movable' : ''].join(' ');
           const adj = s.w !== s.defaultW ? '<span class="tl-adj">무게 조정</span>' : '';
-          return `<button type="button" class="${cls}" data-testid="bar-${esc(s.id)}" data-id="${esc(s.id)}" data-due="${s.due}" data-fixed="${s.fixed}" data-status="${s.status}" data-type="${s.type}"
+          const dt = new Date(toN(s.due) * DAY_MS);
+          const aria = `${s.name}, 마감 ${dt.getUTCMonth() + 1}월 ${dt.getUTCDate()}일${movable(s) ? ', 좌우 화살표로 하루씩 옮길 수 있어요' : s.fixed ? ', 고정 일정' : ''}`;
+          return `<button type="button" class="${cls}" tabindex="0" role="button" aria-label="${esc(aria)}" data-testid="bar-${esc(s.id)}" data-id="${esc(s.id)}" data-due="${s.due}" data-fixed="${s.fixed}" data-status="${s.status}" data-type="${s.type}"
             style="left:${(a - START) * DAY}px;width:${w}px;top:${lane * LANE + PAD}px;height:${BAR_H}px" title="${esc(s.name)} · 마감 ${md(s.due)}">
             ${locked && (!out || w >= 28) ? LOCK : ''}${s.difficulty && (!out || w >= 44) ? `<span class="tl-dots">${DOTS[s.difficulty]}</span>` : ''}<span class="tl-name">${s.difficulty && out && w < 44 ? `<span class="tl-dots">${DOTS[s.difficulty]}</span> ` : ''}${esc(s.name)}</span>${adj}
           </button>`;
@@ -206,6 +210,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
       <div class="tl-toolbar glass">
         <div><h2 class="tl-title">마감 시뮬레이터 <span class="tl-mode" data-testid="tl-mode-label">${teacher ? '학년 기상도' : '개인 기상도'}</span></h2><p class="sub">${teacher ? '막대를 끌어 마감을 옮겨 보세요.' : '개인 과제 막대를 끌어 옮겨 보세요. 학교 일정은 선생님만 옮길 수 있어요.'}</p></div>
         <div class="tl-actions">
+          <button type="button" class="btn btn-ghost" data-testid="tl-today-btn">오늘로</button>
           <button type="button" class="btn btn-ghost" data-testid="undo" ${canUndo ? '' : 'disabled'}>되돌리기</button>
           <button type="button" class="btn btn-ghost" data-testid="reset">초기화</button>
         </div>
@@ -252,6 +257,13 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
       const b = el.querySelector<HTMLElement>(`[data-id="${CSS.escape(revealId)}"]`);
       if (b) reveal(sc, b, false);
       revealId = null;
+    }
+    if (focusBar) {
+      const fb = el.querySelector<HTMLElement>(`[data-id="${CSS.escape(focusBar)}"]`);
+      if (fb) {
+        fb.focus({ preventScroll: true });
+        reveal(sc, fb, false);
+      }
     }
     syncLabels();
   }
@@ -302,8 +314,9 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
         <dt>무게 w</dt><dd class="num">${s.w.toFixed(1)}${s.w !== s.defaultW ? ' <span class="tl-adj">무게 조정</span>' : ''}</dd>
         <dt>준비 L</dt><dd class="num">${s.L}일</dd>
         <dt>참여율 p</dt><dd class="num">${Math.round(s.p * 100)}%</dd>
-        <dt>고정</dt><dd>${s.fixed ? '고정 일정' : '옮길 수 있어요'}</dd>
+        <dt>고정</dt><dd data-testid="fixed-state">${s.fixed ? '학교가 정한 일정이라 옮길 수 없어요.' : '옮길 수 있어요'}</dd>
       </dl>
+      ${teacher && s.type !== 'personal' ? `<button type="button" class="btn btn-ghost tl-fixed-toggle" data-testid="fixed-toggle">${s.fixed ? '옮길 수 있게 바꾸기' : '고정으로 바꾸기'}</button>` : ''}
       ${s.status === 'reported' && teacher ? `<div class="tl-confirm"><p class="sub tl-note">학생이 제보한 일정이에요.</p><button type="button" class="btn" data-testid="confirm-btn">확정하기</button></div>` : ''}
       ${s.type === 'personal' && !teacher ? `<button type="button" class="btn btn-ghost tl-remove" data-testid="task-remove">삭제</button>` : ''}
       ${top}
@@ -322,6 +335,16 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     const t = e.target as HTMLElement;
     if (t.closest('[data-testid="undo"]')) return void store.undo();
     if (t.closest('[data-testid="reset"]')) return void store.reset();
+    if (t.closest('[data-testid="tl-today-btn"]')) {
+      const sc = el.querySelector<HTMLElement>('.tl-scroll');
+      if (sc) sc.scrollLeft = Math.max(0, (toN(SEMESTER.today) - START) * DAY - sc.clientWidth / 2);
+      return;
+    }
+    if (t.closest('[data-testid="fixed-toggle"]') && selected) {
+      const s = store.getState().schedules.find((x) => x.id === selected);
+      if (s && !store.setFixed(s.id, !s.fixed)) toast('바꾸지 못했어요. 다시 시도해 주세요.');
+      return;
+    }
     if (t.closest('.tl-close')) {
       selected = null;
       return render();
@@ -363,6 +386,33 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
       else if (r.reason === 'forbidden') toast('학교 일정은 선생님만 옮길 수 있어요.');
     }
   }
+
+  function reject(bar: HTMLElement, s: Schedule): void {
+    bar.classList.remove('bounce');
+    void bar.offsetWidth;
+    bar.classList.add('bounce');
+    toast(s.type !== 'personal' && !store.can('move') ? '학교 일정은 선생님만 옮길 수 있어요.' : '학교가 정한 일정이라 옮길 수 없어요.');
+  }
+
+  // 키보드: ←/→ 하루, Shift 7일, Enter/Space 패널
+  el.addEventListener('keydown', (e) => {
+    const bar = (e.target as HTMLElement).closest<HTMLElement>('.tl-bar');
+    if (!bar) return;
+    const s = store.getState().schedules.find((x) => x.id === bar.dataset.id);
+    if (!s) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      selected = s.id;
+      revealId = s.id;
+      render();
+      return;
+    }
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    if (!movable(s)) return reject(bar, s);
+    const k = (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 7 : 1);
+    doMove(s.id, add(s.due, k));
+  });
 
   // 드래그
   let drag: { id: string; bar: HTMLElement; x0: number; moved: boolean; can: boolean; s: Schedule; pid: number } | null = null;
@@ -410,10 +460,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
       return;
     }
     if (!d.can) {
-      d.bar.classList.remove('bounce');
-      void d.bar.offsetWidth;
-      d.bar.classList.add('bounce');
-      toast(d.s.type !== 'personal' && !store.can('move') ? '학교 일정은 선생님만 옮길 수 있어요.' : '학교가 정한 일정이라 옮길 수 없어요.');
+      reject(d.bar, d.s);
       if (pending) {
         pending = false;
         render();

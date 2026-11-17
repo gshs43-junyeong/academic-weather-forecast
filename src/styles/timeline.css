@@ -55,6 +55,9 @@
 .tl-bar.is-reported { border-style: dashed; }
 .tl-bar.is-selected { box-shadow: 0 0 0 3px var(--w-sunny); }
 .tl-bar.is-dragging { z-index: 5; cursor: grabbing; box-shadow: var(--shadow-lift); transition: box-shadow var(--dur) var(--ease); scale: 1.06; }
+.tl-bar:focus { outline: none; }
+.tl-bar:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; z-index: 4; }
+.tl-fixed-toggle { align-self: flex-start; }
 .tl-bar.bounce { animation: tl-bounce .4s var(--ease); }
 @keyframes tl-bounce { 0%,100% { translate: 0; } 25% { translate: -8px; } 50% { translate: 6px; } 75% { translate: -3px; } }
 .tl-lock { flex: none; color: var(--ink-2); }
