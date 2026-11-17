@@ -7,11 +7,11 @@
 ## 완료 조건 체크리스트 (SPEC.md 1-2)
 | 조건 | 상태 | 근거 |
 |---|---|---|
-| MVP1-① 18주 날씨 카드 | 미완 | |
-| MVP1-② R 소수 둘째 자리·판정 기준 | 미완 | |
-| MVP1-③ 상세 그래프·기여 합 = W | 미완 | |
-| MVP1-④ 계산 예시 W 8.04·R 1.79·폭풍 | 미완 | |
-| MVP1-⑤ 폭풍 빨간 테두리·번쩍임 | 미완 | |
+| MVP1-① 18주 날씨 카드 | 통과 | inspector 20:06 · 세 학년 모두 week-card 18장, 일정 107개 · inspect-shots/mvp1-home-1440.png |
+| MVP1-② R 소수 둘째 자리·판정 기준 | 통과 | inspector · 54장 data-r 소수 둘째 자리, 날씨가 0.7/1.15/1.6 기준과 일치(어긋남 0건) |
+| MVP1-③ 상세 그래프·기여 합 = W | 통과 | inspector · 5개 주에서 기여 합과 W 차이 0.0000, 일별 막대 7개 · inspect-shots/mvp1-detail-w12-1440.png |
+| MVP1-④ 계산 예시 W 8.04·R 1.79·폭풍 | 통과 | inspector · calc.test.ts 테스트 2·3, ?example=1 화면 W 8.04·R 1.79·폭풍 · inspect-shots/mvp1-example-detail-1440.png |
+| MVP1-⑤ 폭풍 빨간 테두리·번쩍임 | 통과 | inspector · is-storm border rgb(217,45,45), animation storm-flash 5s · inspect-shots/mvp1-storm-a.png, mvp1-storm-b.png |
 | MVP2-① 교사 모드 타임라인 | 통과 | inspector 20:04 · 막대 34개, 학생 드래그 시 data-due 불변 · inspect-shots/mvp2-1-student-1440.png |
 | MVP2-② 드래그 재계산·전후 배지 | 통과 | inspector · g1-self-bio 12/23→12/15 드래그, 17주 폭풍→비 배지, 반영 66ms · inspect-shots/mvp2-2-drag-1440.png |
 | MVP2-③ 고정 일정 잠금 | 통과 | inspector · 테스트 6 고정 일정 이동 거부, g1-rne-final 자물쇠·드래그 불변 · inspect-shots/mvp2-3-fixed-1440.png |
@@ -23,8 +23,8 @@
 | MVP3-④ 샘플 3개 정답 일치 | 통과 | inspector · parser.test.ts "모든 칸이 정답과 같다" 샘플 3개(38개 통과) |
 | MVP3-⑤ 외부 요청 0건 | 통과 | inspector · 해석 전후·세션 전체 localhost 외 요청 0건 |
 | 추가-① 로그인 카드(아이디·비밀번호 미리 입력, 학생/교사) | 통과 | inspector · student01·가려진 비밀번호 미리 입력, 임의 아이디 로그인, 나가기 · inspect-shots/mvp3-login-1440x900.png |
-| 추가-② 일 단위 달력 | 미완 | |
-| 추가-③ 생명과학 수행 11/20 어려움(1학년) | 미완 | |
+| 추가-② 일 단위 달력 | 통과 | inspector · cal-day 126칸, 15칸을 store days[]와 대조 일치, 폭풍 주 판정은 주 단위 · inspect-shots/mvp1-calendar-1440.png |
+| 추가-③ 생명과학 수행 11/20 어려움(1학년) | 통과 | inspector·data-designer · g1-perf-bio w3 L10 이동 가능, 12주 상세 기여에 표시 |
 | 추가-④ 교사 무게 직접 수정 | 통과 | inspector · 무게 9 저장 시 R 1.87→4.05, 무게 조정 표시, 범위 밖 거부, 학생 비활성 · inspect-shots/mvp2-w-adjust-1440.png |
 | MVP4-① 개인 기상도 | 미완 | |
 | MVP4-② 개인 과제 막대 | 미완 | |
@@ -39,7 +39,7 @@
 ## 진행 메모 (메인이 바뀌어도 이어 가기 위한 상태)
 - 19:51 키트 풀기·Vite+TS 구성·공용 계약(src/types.ts, CONTRACT.md)·첫 푸시.
 - 20:02 7개 모듈 구현·main 푸시 완료(테스트 67개·빌드 통과). 20:03 data-designer 데모 조건 전부 통과(1학년 14주 2.36·17주 1.87 폭풍, 이동 후 1.28 비, 대수 자평 1.80 폭풍·추천 1순위 12/30 1.39 비, 3학년 13주 2.62 폭풍, 일정 107개).
-- 20:04 MVP2 inspector 전부 통과. 20:05 MVP3 inspector: ①④⑤·추가-① 통과, ②③ 실패 → 등록 창 수정 에이전트 실행 중, 끝나면 ②③ 재판정. MVP1 inspector 판정 대기 중.
+- 20:04 MVP2 inspector 전부 통과. 20:05 MVP3 inspector: ①④⑤·추가-① 통과, ②③ 실패 → 등록 창 수정 에이전트 실행 중, 끝나면 ②③ 재판정. 20:06 MVP1 inspector 전부 통과(추가-②③ 포함, 1280×720 홈 스크롤 없음).
 - 스크린샷은 inspect-shots/(git 제외)에 있다.
 
 ## 막힘
