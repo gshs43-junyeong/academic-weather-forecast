@@ -16,7 +16,7 @@ const plusDays = (d: string, n: number): string => { try { return addDays(d, n);
 const md = (d: string): string => `${Number(d.slice(5, 7))}/${Number(d.slice(8, 10))}`;
 const mdDow = (d: string): string => `${md(d)}(${DOW[new Date(toN(d) * 86400000).getUTCDay()]})`;
 const weekIdx = (d: string): number => { try { return weekIndexOf(d); } catch { return Math.floor((toN(d) - toN(SEMESTER.start)) / 7); } };
-const weekLabel = (i: number): string => { const s = fromN(toN(SEMESTER.start) + i * 7); const e = fromN(toN(s) + 6); return `${i + 1}주(${md(s)}~${Number(e.slice(8, 10))})`; };
+const weekLabel = (i: number): string => { const s = fromN(toN(SEMESTER.start) + i * 7); const e = fromN(toN(s) + 6); return `${i + 1}주(${md(s)}~${md(e)})`; };
 const inSemester = (d: string): boolean => d >= SEMESTER.start && d <= SEMESTER.end;
 const esc = (s: string): string => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 const icon = (w: Weather): string => `<img class="rg-ic" src="/weather/${w}.webp" alt="" width="20" height="20">`;
@@ -100,8 +100,8 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
           <div class="rg-f"><span class="rg-flabel">고정 여부</span>
             <label class="rg-checks"><input type="checkbox" data-testid="field-fixed"> 학교가 정한 고정 일정</label>
             <p class="rg-hint" data-testid="field-hint-fixed"></p></div>
-          <div class="rg-f"><label for="rg-weight">무게</label>
-            <input id="rg-weight" class="num" data-testid="field-weight" type="number" min="0.1" max="10" step="0.1"${teacher ? '' : ' readonly'}>
+          <div class="rg-f"><label for="rg-weight">무게</label><div class="rg-wrow">
+            <input id="rg-weight" class="num" data-testid="field-weight" type="number" min="0.1" max="10" step="0.1"${teacher ? '' : ' readonly'}>${teacher ? '<button type="button" class="rg-wreset" data-testid="field-weight-reset" hidden>기본값으로</button>' : ''}</div>
             <p class="rg-hint" data-testid="field-hint-weight">${teacher ? '' : '무게는 선생님만 바꿀 수 있어요.'}</p></div>
           <div class="rg-f"><span class="rg-flabel">준비 일수 · 참여율</span>
             <p class="rg-ro num" data-testid="field-ro">-</p></div>
@@ -143,6 +143,9 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
   const pvTop = $('preview-top3');
   let missHints: Record<string, string> = {};
   let parsedP: number | null = null;
+  let weightTouched = false;
+  const wReset = overlay.querySelector('[data-testid="field-weight-reset"]') as HTMLButtonElement | null;
+  const fmtW = (n: number): string => String(Math.round(n * 10) / 10);
 
   const grades = (): Grade[] => Array.from(fGrades.querySelectorAll<HTMLInputElement>('input:checked')).map((i) => Number(i.value) as Grade);
   const curGrade = (): Grade | null => { const g = grades(); return g.length ? (g.includes(store.getState().grade) ? store.getState().grade : g[0]) : null; };
@@ -166,7 +169,7 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
     fDiff.disabled = !(t && DIFF_TYPES.includes(t));
     fSubj.disabled = t !== 'exam';
     const d = defs();
-    if (d) { fW.value = String(Math.round(d.w * 10) / 10); fFixed.checked = d.fixed; }
+    if (d) { if (!weightTouched) fW.value = fmtW(d.w); fFixed.checked = d.fixed; }
   };
 
   const fieldsWithIssue = new Set<string>();
@@ -196,7 +199,12 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
     const w = Number(fW.value);
     if (fW.value === '') { missing.push('weight'); setHint('weight', teacher ? '' : '무게는 선생님만 바꿀 수 있어요.', false); }
     else if (!(w >= 0.1 && w <= 10)) { wrong.push('weight'); setHint('weight', '무게는 0.1~10 사이로 넣어 주세요.', true); }
-    else setHint('weight', teacher ? '' : '무게는 선생님만 바꿀 수 있어요.', false);
+    else {
+      const dw = defs()?.w;
+      const differs = weightTouched && dw !== undefined && fmtW(dw) !== fmtW(w);
+      setHint('weight', teacher ? (differs ? `기본값은 ${fmtW(dw!)}${/[013678]$/.test(fmtW(dw!)) ? "이에요" : "예요"}.` : '') : '무게는 선생님만 바꿀 수 있어요.', false);
+    }
+    if (wReset) { const dw = defs()?.w; wReset.hidden = !(weightTouched && dw !== undefined && fmtW(dw) !== fW.value); }
     for (const n of ['difficulty', 'subject', 'internal']) setHint(n, base(n), false);
 
     const d = defs(); const p = parsedP ?? d?.p;
@@ -292,7 +300,9 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
     parseMsg.textContent = `해석했어요. 밑줄 친 부분이 근거예요. (${Math.round(ms)}ms)`;
     missHints = {};
     const miss = (n: string): void => { const l = FIELD_LABEL[n]; missHints[n] = `${l}${josa(l, '을', '를')} 찾지 못했어요. 직접 입력해 주세요.`; };
-    fName.value = parsed.name.value ?? ''; if (!parsed.name.value) miss('name');
+    let nm = (parsed.name.value ?? '').trim();
+    if (nm.length > 40) { const first = nm.split(/\r?\n/)[0].trim(); nm = first.length <= 40 ? first : ''; }
+    fName.value = nm; if (!nm) miss('name');
     const pt = parsed.type.value;
     fType.value = pt && TYPES.includes(pt) ? pt : ''; if (!fType.value) miss('type');
     if (parsed.difficulty.value) fDiff.value = parsed.difficulty.value;
@@ -317,7 +327,9 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
   // ── 값이 바뀔 때마다 다시 검사 ──
   for (const el of [fType, fDiff, fInt]) el.addEventListener('change', () => { applyDefaults(); validate(); });
   fSubj.addEventListener('input', () => { applyDefaults(); validate(); });
-  for (const el of [fName, fDue, fW]) el.addEventListener('input', validate);
+  for (const el of [fName, fDue]) el.addEventListener('input', validate);
+  fW.addEventListener('input', () => { if (teacher) weightTouched = true; validate(); });
+  wReset?.addEventListener('click', () => { weightTouched = false; applyDefaults(); validate(); fW.focus(); });
   for (const el of [fDue, fFixed]) el.addEventListener('change', validate);
   fGrades.addEventListener('change', () => { applyDefaults(); validate(); });
 
@@ -347,7 +359,7 @@ export function openRegister(store: Store, preset?: Partial<Schedule>): void {
   }
   applyDefaults();
   if (preset?.fixed !== undefined) fFixed.checked = preset.fixed;
-  if (preset?.w !== undefined) fW.value = String(preset.w);
+  if (preset?.w !== undefined) { fW.value = String(preset.w); weightTouched = true; }
   validate();
   notice.focus();
 }

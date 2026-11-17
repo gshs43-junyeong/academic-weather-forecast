@@ -217,4 +217,24 @@ describe('store', () => {
     s.setView('planner');
     expect(s.getState().view).toBe('home');
   });
+  it('setFixed: 학생 불가, 교사 고정/가능 전환, undo 복원', () => {
+    const st = createStore({ schedules: base(), storage: false });
+    st.login({ role: 'student', grade: 1, userId: 'student01' });
+    expect(st.setFixed('a', true)).toBe(false);
+    const s = teacher();
+    let n = 0;
+    s.subscribe(() => { n++; });
+    const before = s.getState().schedules;
+    expect(s.setFixed('a', true)).toBe(true);
+    expect(n).toBe(1);
+    expect(s.setFixed('a', true)).toBe(false);
+    expect(s.setFixed('zz', true)).toBe(false);
+    expect(s.move('a', '2026-12-18')).toEqual({ ok: false, reason: 'fixed' });
+    expect(s.undo()).toBe(true);
+    expect(s.getState().schedules).toBe(before);
+    expect(s.setFixed('fx', false)).toBe(true);
+    expect(s.move('fx', '2026-12-11').ok).toBe(true);
+    s.reset();
+    expect(s.getState().schedules.find((x) => x.id === 'fx')!.fixed).toBe(true);
+  });
 });

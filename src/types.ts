@@ -166,4 +166,6 @@ export interface Store {
   removeSchedule(id: string): boolean;
   /** 제보(reported) 일정을 확정(교사만). 되돌리기 대상 */
   confirmSchedule(id: string): boolean;
+  /** 고정/가능 설정(교사만, SPEC 1-1). 개인 과제는 대상 아님. 되돌리기 대상 */
+  setFixed(id: string, fixed: boolean): boolean;
 }

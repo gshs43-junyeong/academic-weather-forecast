@@ -202,6 +202,17 @@ export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }
       commit(next);
       return true;
     },
+    setFixed(id, fixed) {
+      if (!isTeacher()) return false;
+      const i = findIdx(id);
+      if (i < 0) return false;
+      const s = state.schedules[i];
+      if (s.type === 'personal' || s.fixed === fixed) return false;
+      const next = state.schedules.slice();
+      next[i] = { ...s, fixed };
+      commit(next);
+      return true;
+    },
     resetWeight(id) {
       if (!isTeacher()) return false;
       const i = state.schedules.findIndex((x) => x.id === id);

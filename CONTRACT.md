@@ -57,3 +57,13 @@ main.ts가 mountBackground(store) → mountShell(root, store) → mountComplete(
 - 리포트: `report`, `cmp-chart`(세 학년 겹친 차트), `cmp-line-{1..3}`, `cmp-storm-count-{1..3}`(폭풍 주 수 숫자), `rp-card`(다음 4주 요약), `rp-week-{0..3}`(data-weather, data-r), `rp-copy`, `rp-print`, `rp-copied`
 - 체험 완료: `complete-chip`(진행 n/3), `complete-open`, `complete-screen`, `complete-code`(4자리), `complete-close`
 - 배경: `bg-layer`(data-weather 또는 data-scene="main"), 그 안의 `video`
+
+### 2차 추가 기능(사람 지시: 검색, GitHub 오픈소스 링크 등 기본 기능)
+| 모듈 | 파일 |
+|---|---|
+| 일정 검색 | src/ui/search.ts, src/styles/search.css |
+| 도움말·정보 | src/ui/about.ts, src/styles/about.css |
+- 머리말 끼워 넣기 순서(오른쪽 묶음, [일정 등록] 앞): `search-open`(돋보기, 36px 아이콘 버튼) → `about-open`(물음표, 36px 아이콘 버튼) → `complete-chip` → `open-register`. 각 모듈이 스스로 끼워 넣고 shell이 다시 그려도 유지한다.
+- data-testid: `search-open`, `search-modal`, `search-input`, `search-result-{n}`(data-id), `search-empty`, `search-close` / `about-open`, `about-modal`, `about-github`(a[href]), `about-reset`, `about-close`, `title-footer`(타이틀·로그인 화면 아래 작은 줄), `title-github`
+- 저장소: GitHub 주소 https://github.com/gshs43-junyeong/academic-weather-forecast
+- Store.setFixed(id, fixed): 교사의 고정/가능 설정.

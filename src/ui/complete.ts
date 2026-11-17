@@ -28,6 +28,20 @@ export function mountComplete(store: Store): void {
   chip.setAttribute('role', 'status');
   document.body.append(chip);
 
+  /** 머리말의 [일정 등록] 앞에 붙인다. 못 찾으면 오른쪽 아래 고정. */
+  function place() {
+    const anchor = document.querySelector<HTMLElement>('header.app-header [data-testid="open-register"]');
+    if (anchor && anchor.parentElement) {
+      if (chip.nextElementSibling !== anchor) anchor.parentElement.insertBefore(chip, anchor);
+      chip.classList.add('in-header');
+    } else {
+      if (chip.parentElement !== document.body) document.body.append(chip);
+      chip.classList.remove('in-header');
+    }
+  }
+  const mo = new MutationObserver(() => place());
+  mo.observe(document.body, { childList: true, subtree: true });
+
   let screen: HTMLElement | null = null;
   let lastKey = '';
 
@@ -87,15 +101,20 @@ export function mountComplete(store: Store): void {
     lastKey = key;
     if (n === 3) {
       chip.classList.add('is-done');
-      chip.innerHTML = `<button type="button" class="cc-open" data-testid="complete-open">${CHECK}<span>체험 완료 코드 보기</span></button>`;
+      chip.innerHTML = `<button type="button" class="cc-open" data-testid="complete-open">${CHECK}<span class="cc-long">체험 완료 코드</span><span class="cc-short">코드</span></button>`;
       chip.querySelector('button')!.addEventListener('click', open);
     } else {
       chip.classList.remove('is-done');
-      chip.innerHTML = `<span class="cc-count">체험 ${n}/3</span>` + steps.map((x) =>
-        `<span class="cc-step${x.done ? ' is-on' : ''}">${x.done ? CHECK : DOT}${x.label}<span class="sr-only">${x.done ? ' 완료' : ' 남음'}</span></span>`).join('');
+      chip.innerHTML = `<button type="button" class="cc-count" aria-expanded="false" aria-label="체험 ${n}/3 진행 보기"><span class="cc-long">체험 </span>${n}/3</button>`
+        + `<div class="cc-panel" role="list">` + steps.map((x) =>
+        `<span class="cc-step${x.done ? ' is-on' : ''}" role="listitem">${x.done ? CHECK : DOT}${x.label}<span class="cc-state">${x.done ? '완료' : '남음'}</span></span>`).join('') + `</div>`;
+      const b = chip.querySelector<HTMLButtonElement>('.cc-count')!;
+      b.addEventListener('click', () => { const o = !chip.classList.contains('is-open'); chip.classList.toggle('is-open', o); b.setAttribute('aria-expanded', String(o)); });
     }
   }
 
-  store.subscribe(render);
+  store.subscribe((s) => { render(s); place(); });
+  document.addEventListener('mousedown', (e) => { if (!chip.contains(e.target as Node)) chip.classList.remove('is-open'); });
   render(store.getState());
+  place();
 }

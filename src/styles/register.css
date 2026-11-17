@@ -88,3 +88,9 @@ mark.ev[data-field="grades"], mark.ev[data-field="internal"], mark.ev[data-field
 }
 .rg-toast.is-out { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .rg-toast { transition: none; } }
+.rg-wrow { display: flex; align-items: center; gap: 8px; }
+.rg-wrow input { flex: 1; min-width: 0; }
+.rg-wreset { flex: none; font: inherit; font-size: var(--fs-sub); padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--glass); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.rg-wreset[hidden] { display: none; }
+.rg-wreset:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.rg-foot { position: sticky; bottom: calc(-1 * var(--s3)); z-index: 2; background: var(--glass-strong); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding-block: var(--s1); }

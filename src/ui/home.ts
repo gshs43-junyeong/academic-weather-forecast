@@ -24,10 +24,13 @@ function f2(n: number): string {
 function icon(w: Weather, size: number, cls = ''): string {
   return `<img class="${cls}" src="/weather/${w}.webp" width="${size}" height="${size}" alt="" draggable="false">`;
 }
-/** 주의 월요일 기준 "12월 1주차" */
-function monthWeekLabel(start: string): string {
+/** 그 주의 목요일이 속한 달의 몇 번째 목요일인지로 "12월 1주차" (11/30 주 → 목 12/3 → 12월 1주차) */
+export function monthWeekLabel(start: string): string {
   const p = parts(start);
-  return `${p.m}월 ${Math.ceil(p.day / 7)}주차`;
+  const mon = new Date(Date.UTC(p.y, p.m - 1, p.day));
+  const dow = (mon.getUTCDay() + 6) % 7; // 월=0
+  const thu = new Date(Date.UTC(p.y, p.m - 1, p.day - dow + 3));
+  return `${thu.getUTCMonth() + 1}월 ${Math.ceil(thu.getUTCDate() / 7)}주차`;
 }
 
 function addDays(d: string, n: number): string {
@@ -81,7 +84,7 @@ function heroHtml(state: AppState, wk: WeekForecast): string {
       <div class="hero-title">${state.grade}학년 · ${monthWeekLabel(wk.start)}</div>
       <div class="sub num">${md(wk.start)} ~ ${md(wk.end)} · ${wk.index + 1}주</div>
     </div>
-    ${icon(wk.weather, 160, 'hero-icon')}
+    <div class="hero-glow">${icon(wk.weather, 160, 'hero-icon')}</div>
     <div class="hero-r num" data-testid="hero-r">R ${f2(wk.R)}</div>
     <div class="hero-weather" data-testid="hero-weather">${WEATHER_LABEL[wk.weather]}</div>
     <div class="hero-summary" data-testid="hero-summary">${summary(state, wk)}</div>
@@ -98,7 +101,7 @@ function weeksHtml(fc: GradeForecast, state: AppState, badges: Record<number, { 
         : '';
       return `<button type="button" class="week-card glass${w.weather === 'storm' ? ' is-storm' : ''}${sel ? ' is-selected' : ''}"
         data-testid="week-card-${w.index}" data-week="${w.index}" data-weather="${w.weather}" data-r="${f2(w.R)}"${sel ? ' aria-current="true"' : ''}>
-        <span class="wc-head"><b>${w.index + 1}주</b><span class="sub num">${md(w.start)}~${md(w.end)}</span></span>
+        <span class="wc-head" title="${monthWeekLabel(w.start)}"><b>${w.index + 1}주</b><span class="sub num">${md(w.start)}~${md(w.end)}</span></span>
         ${icon(w.weather, 48, 'wc-icon')}
         <span class="wc-r num">${f2(w.R)}</span>
         <span class="wc-name sub">${WEATHER_LABEL[w.weather]}</span>
@@ -123,7 +126,7 @@ function calendarHtml(fc: GradeForecast, state: AppState): string {
         })
         .join('');
       return `<div class="cal-row${sel ? ' is-selected' : ''}"${sel ? ' aria-current="true"' : ''}>
-        <button type="button" class="cal-rowhead" data-week="${w.index}" data-weather="${w.weather}"><b>${w.index + 1}주</b><span class="sub">${WEATHER_LABEL[w.weather]}</span></button>${days}</div>`;
+        <button type="button" class="cal-rowhead" data-week="${w.index}" data-weather="${w.weather}" title="${monthWeekLabel(w.start)}"><b>${w.index + 1}주</b><span class="sub cal-mw">${monthWeekLabel(w.start)}</span><span class="sub">${WEATHER_LABEL[w.weather]}</span></button>${days}</div>`;
     })
     .join('');
   return `<div class="calendar" data-testid="calendar">
@@ -137,7 +140,7 @@ function stripHtml(fc: GradeForecast, state: AppState): string {
     .map((w) => {
       const sel = w.index === state.selectedWeek;
       return `<button type="button" class="strip-cell${sel ? ' is-selected' : ''}" data-week="${w.index}" data-weather="${w.weather}"
-        title="${w.index + 1}주 · ${WEATHER_LABEL[w.weather]} · R ${f2(w.R)}" aria-label="${w.index + 1}주 ${WEATHER_LABEL[w.weather]}"${sel ? ' aria-current="true"' : ''}>
+        title="${w.index + 1}주 · ${monthWeekLabel(w.start)} · ${WEATHER_LABEL[w.weather]} · R ${f2(w.R)}" aria-label="${w.index + 1}주 ${WEATHER_LABEL[w.weather]}"${sel ? ' aria-current="true"' : ''}>
         <span class="num">${w.index + 1}</span></button>`;
     })
     .join('')}</div>`;
@@ -201,7 +204,7 @@ function detailHtml(store: Store, wk: WeekForecast): string {
     <div class="detail-top">
       ${icon(wk.weather, 96, 'detail-icon')}
       <div>
-        <div class="sub num">${wk.index + 1}주 · ${md(wk.start)} ~ ${md(wk.end)}</div>
+        <div class="sub num">${monthWeekLabel(wk.start)} · ${wk.index + 1}주 · ${md(wk.start)} ~ ${md(wk.end)}</div>
         <div class="detail-r num" data-testid="detail-r">R ${f2(wk.R)}</div>
         <div class="detail-meta"><span class="detail-weather">${WEATHER_LABEL[wk.weather]}</span>
         <span class="sub num" data-testid="detail-w">주간 부하 W ${f2(wk.W)}</span></div>
