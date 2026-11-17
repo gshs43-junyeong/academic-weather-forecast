@@ -34,3 +34,26 @@ src/types.ts, src/main.ts, src/styles/tokens.css, index.html은 고치지 않는
 ## 날짜·주
 - 18주: 2026-08-31(월) ~ 2027-01-03(일). 주 index 0 = 8/31~9/6, 13 = 11/30~12/6, 16 = 12/21~27. '오늘' = 2026-11-17 고정(SEMESTER.today).
 - 일 단위 날씨 = 하루 부하 ÷ (W̄ ÷ 7), 기준 0.7/1.15/1.6. 폭풍 주 판정·배지·추천은 주 단위.
+
+## 2차 루프 추가 (사람 지시 반영 — PROGRESS.md "사람 개입 기록" 11~ 참고)
+### 파일 소유 추가
+| 모듈 | 파일 |
+|---|---|
+| 플래너(MVP 4) | src/ui/planner.ts(+ planner-*.ts), src/styles/planner.css |
+| 학년 비교·리포트(MVP 5) | src/ui/report.ts(+ report-*.ts), src/styles/report.css |
+| 체험 완료·배경 영상 | src/ui/complete.ts, src/ui/background.ts, src/styles/complete.css, src/styles/background.css |
+main.ts가 mountBackground(store) → mountShell(root, store) → mountComplete(store) 순서로 부른다. shell은 `<section data-view="planner">`(mountPlanner), `<section data-view="report">`(mountReport)도 만든다.
+
+### 화면 흐름
+- 타이틀 화면(title-screen: "학업 기상청" + 한 줄 설명 + [시작하기] title-start) → 로그인 카드 → 앱. 로고(logo-home)를 누르면 나가기와 같이 로그인 화면으로(일정 상태 유지).
+- **역할은 로그인으로만 정해진다.** 머리말의 role-student / role-teacher 전환 버튼은 없앤다(현재 역할 표시 `role-label`만). 아이디는 처음 로그인한 역할에 묶이고(브라우저 저장소), 같은 아이디로 다른 역할을 고르면 거부("이 아이디는 학생 계정이에요.", login-error).
+- 보기 탭: view-home(기상 지도), view-timeline(타임라인), view-planner(플래너 — 학생만 보임), view-report(학년 비교·리포트 — 교사만 보임).
+- 개인 과제(type 'personal')는 학년 예보(getForecast)에 들어가지 않고 개인 예보(getPersonalForecast)에만 들어간다. 교사 화면에는 보이지 않는다.
+
+### data-testid 추가
+- 타이틀·로그인: `title-screen`, `title-start`, `login-error`, `logo-home`, `role-label`, `view-planner`, `view-report`
+- 플래너: `planner`, `pl-check-{scheduleId}`(체크박스), `pl-week-{0..17}`(개인 기상도 칸, data-weather, data-r), `pl-dday`("다음 폭풍까지 D-n"), `pl-alert`(14일 전 경보 배너), `pl-order`(시작 순서 제안, 항목 `pl-order-item-{n}`), `pl-task-name`, `pl-task-hours`, `pl-task-start`, `pl-task-due`, `pl-task-add`, `pl-task-hint`, `pl-task-{id}`(목록), `pl-task-remove-{id}`
+- 타임라인(학생): 주 눈금은 개인 예보(tl-week-{i}의 data-r·data-weather가 getPersonalForecast 값), `tl-mode-label`("개인 기상도" / "학년 기상도"), 개인 과제 막대 `bar-{id}`(data-type="personal"), 제보 확정 버튼 `confirm-btn`(교사)
+- 리포트: `report`, `cmp-chart`(세 학년 겹친 차트), `cmp-line-{1..3}`, `cmp-storm-count-{1..3}`(폭풍 주 수 숫자), `rp-card`(다음 4주 요약), `rp-week-{0..3}`(data-weather, data-r), `rp-copy`, `rp-print`, `rp-copied`
+- 체험 완료: `complete-chip`(진행 n/3), `complete-open`, `complete-screen`, `complete-code`(4자리), `complete-close`
+- 배경: `bg-layer`(data-weather 또는 data-scene="main"), 그 안의 `video`
