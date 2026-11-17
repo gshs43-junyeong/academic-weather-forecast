@@ -1,8 +1,10 @@
 import type { AppState, Store, Schedule, Grade, Role, Session, ViewName, GradeForecast, Weather, MoveResult } from '../types';
-import { forecast, moveSchedule, weekIndexOf, SEMESTER, EXAMPLE } from '../calc';
+import { forecast, moveSchedule, weekIndexOf, inSemester, diffDays, SEMESTER, EXAMPLE } from '../calc';
 import { DEMO_SCHEDULES } from '../data/schedules';
 
 const KEY = 'awf:v1';
+const ACCOUNTS_KEY = 'awf:accounts';
+const DEFAULT_ACCOUNTS: Record<string, Role> = { student01: 'student', teacher01: 'teacher' };
 const clone = (list: Schedule[]): Schedule[] => list.map((s) => ({ ...s, period: s.period ? { ...s.period } : undefined }));
 
 function getParams(): URLSearchParams {
@@ -24,7 +26,7 @@ function safeWeekIndex(date: string, fallback: number): number {
   } catch { return fallback; }
 }
 
-interface Saved { session: Session | null; role: Role; grade: Grade; schedules: Schedule[] }
+interface Saved { session: Session | null; role: Role; grade: Grade; schedules: Schedule[]; personalChecked?: string[] }
 
 /** 앱 상태 저장소. ?example=1 이면 계산 예시(EXAMPLE, 기준선 4.5)를 1학년 데이터로 불러온다. */
 export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }): Store {
@@ -47,6 +49,7 @@ export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }
     schedules: clone(base),
     focusScheduleId: null,
     detailOpen: false,
+    personalChecked: [],
   };
 
   if (storage) {
@@ -60,6 +63,7 @@ export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }
           if (saved.grade === 1 || saved.grade === 2 || saved.grade === 3) state.grade = saved.grade;
           if (saved.session && typeof saved.session.userId === 'string') state.session = saved.session;
           if (Array.isArray(saved.schedules)) state.schedules = saved.schedules;
+          if (Array.isArray(saved.personalChecked)) state.personalChecked = saved.personalChecked.filter((x) => typeof x === 'string');
         }
       }
     } catch { /* 저장소 실패 → 가상 데이터 */ }
@@ -72,7 +76,7 @@ export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }
   function persist() {
     if (!storage) return;
     try {
-      const saved: Saved = { session: state.session, role: state.role, grade: state.grade, schedules: state.schedules };
+      const saved: Saved = { session: state.session, role: state.role, grade: state.grade, schedules: state.schedules, personalChecked: state.personalChecked };
       storage.setItem(KEY, JSON.stringify(saved));
     } catch { /* ignore */ }
   }
@@ -87,24 +91,66 @@ export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }
     undoStack.push(state.schedules);
     set({ schedules: next });
   }
+  const noPersonal = new WeakMap<Schedule[], Schedule[]>();
+  function schoolOnly(list: Schedule[]): Schedule[] {
+    let v = noPersonal.get(list);
+    if (!v) { v = list.filter((x) => x.type !== 'personal'); noPersonal.set(list, v); }
+    return v;
+  }
   function fc(list: Schedule[], grade: Grade): GradeForecast {
     let m = cache.get(list);
     if (!m) { m = new Map(); cache.set(list, m); }
     let f = m.get(grade);
     if (!f) {
-      f = forecast(list, grade, baseline !== undefined ? { baseline } : undefined);
+      f = forecast(schoolOnly(list), grade, baseline !== undefined ? { baseline } : undefined);
       m.set(grade, f);
     }
     return f;
   }
+  // 개인 예보 메모: 일정 배열·체크 배열·학년이 같으면 재사용
+  let pMemo: { list: Schedule[]; checked: string[]; grade: Grade; f: GradeForecast } | null = null;
+
+  // 아이디-역할 묶음. 저장소를 못 쓰면 메모리
+  let memAccounts: Record<string, Role> = { ...DEFAULT_ACCOUNTS };
+  const accStorage = opts?.storage === false || opts?.schedules ? null : getStorage();
+  if (accStorage && fresh) { try { accStorage.removeItem(ACCOUNTS_KEY); } catch { /* ignore */ } }
+  function readAccounts(): Record<string, Role> {
+    if (accStorage) {
+      try {
+        const raw = accStorage.getItem(ACCOUNTS_KEY);
+        const obj = raw ? (JSON.parse(raw) as Record<string, Role>) : {};
+        return { ...DEFAULT_ACCOUNTS, ...memAccounts, ...obj, student01: 'student', teacher01: 'teacher' };
+      } catch { /* ignore */ }
+    }
+    return { ...memAccounts, student01: 'student', teacher01: 'teacher' };
+  }
+  function writeAccounts(acc: Record<string, Role>) {
+    memAccounts = { ...acc };
+    if (!accStorage) return;
+    try { accStorage.setItem(ACCOUNTS_KEY, JSON.stringify(acc)); } catch { /* ignore */ }
+  }
+  const findIdx = (id: string) => state.schedules.findIndex((x) => x.id === id);
   const isTeacher = () => state.role === 'teacher';
 
   const store: Store = {
     getState: () => state,
     subscribe(fn) { listeners.add(fn); return () => { listeners.delete(fn); }; },
-    login(session) { set({ session: { ...session }, role: session.role, grade: session.grade }); },
+    login(session) {
+      const v = state.view;
+      const view: ViewName = (v === 'report' && session.role === 'student') || (v === 'planner' && session.role === 'teacher') ? 'home' : v;
+      set({ session: { ...session }, role: session.role, grade: session.grade, view });
+    },
     logout() { set({ session: null, detailOpen: false }); },
-    setRole(role) { set({ role, session: state.session ? { ...state.session, role } : null }); },
+    setRole() { /* 역할은 로그인으로만 정해진다 */ },
+    tryLogin(session) {
+      const userId = (session.userId || '').trim();
+      const acc = readAccounts();
+      const bound = acc[userId];
+      if (bound && bound !== session.role) return { ok: false, reason: 'id_bound', boundRole: bound };
+      if (!bound && userId) writeAccounts({ ...acc, [userId]: session.role });
+      store.login({ ...session, userId });
+      return { ok: true };
+    },
     setGrade(grade) { set({ grade, session: state.session ? { ...state.session, grade } : null }); },
     selectWeek(index, openDetail) {
       const i = Math.max(0, Math.min(SEMESTER.weeks - 1, Math.round(index)));
@@ -112,6 +158,7 @@ export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }
     },
     closeDetail() { set({ detailOpen: false }); },
     setView(view: ViewName, focusScheduleId?: string | null) {
+      if ((view === 'report' && state.role === 'student') || (view === 'planner' && state.role === 'teacher')) view = 'home';
       set({ view, focusScheduleId: focusScheduleId === undefined ? state.focusScheduleId : focusScheduleId });
     },
     setHomeMode(mode) { set({ homeMode: mode }); },
@@ -177,6 +224,58 @@ export function createStore(opts?: { schedules?: Schedule[]; storage?: boolean }
       return true;
     },
     canUndo: () => undoStack.length > 0,
+    setPersonalChecked(id, checked) {
+      const has = state.personalChecked.includes(id);
+      if (checked === has) return;
+      set({ personalChecked: checked ? [...state.personalChecked, id] : state.personalChecked.filter((x) => x !== id) });
+    },
+    getPersonalForecast() {
+      const g = state.grade;
+      if (pMemo && pMemo.list === state.schedules && pMemo.checked === state.personalChecked && pMemo.grade === g) return pMemo.f;
+      const f = forecast(state.schedules, g, { personal: { checkedIds: state.personalChecked }, baseline: fc(state.schedules, g).baseline });
+      pMemo = { list: state.schedules, checked: state.personalChecked, grade: g, f };
+      return f;
+    },
+    addPersonalTask(input) {
+      if (state.role !== 'student') return null;
+      const name = (input?.name ?? '').trim();
+      const hours = Number(input?.hours);
+      const { startDate, due } = input ?? ({} as typeof input);
+      if (!name || !Number.isFinite(hours) || hours <= 0 || hours > 200) return null;
+      if (typeof startDate !== 'string' || typeof due !== 'string') return null;
+      try {
+        if (!inSemester(startDate) || !inSemester(due)) return null;
+        if (diffDays(due, startDate) < 0) return null;
+      } catch { return null; }
+      const w = Math.round((hours / 4) * 100) / 100;
+      const s: Schedule = {
+        id: `p-${Date.now()}`, name, type: 'personal', grade: state.grade, due, startDate,
+        w, defaultW: w, L: diffDays(due, startDate) + 1, p: 1,
+        fixed: false, internal: true, optional: false, status: 'confirmed', source: 'user',
+      };
+      while (state.schedules.some((x) => x.id === s.id)) s.id += 'x';
+      commit([...state.schedules, s]);
+      return s;
+    },
+    removeSchedule(id) {
+      const i = findIdx(id);
+      if (i < 0) return false;
+      const s = state.schedules[i];
+      const ok = s.type === 'personal' ? state.role === 'student' : s.source === 'user' && isTeacher();
+      if (!ok) return false;
+      commit(state.schedules.filter((x) => x.id !== id));
+      if (state.personalChecked.includes(id)) set({ personalChecked: state.personalChecked.filter((x) => x !== id) });
+      return true;
+    },
+    confirmSchedule(id) {
+      if (!isTeacher()) return false;
+      const i = findIdx(id);
+      if (i < 0 || state.schedules[i].status !== 'reported') return false;
+      const next = state.schedules.slice();
+      next[i] = { ...next[i], status: 'confirmed' };
+      commit(next);
+      return true;
+    },
     reset() {
       undoStack.length = 0;
       set({ schedules: base, focusScheduleId: null });

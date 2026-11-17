@@ -108,7 +108,7 @@ export interface SampleNotice {
 
 // ── 화면 상태 ──
 export interface Session { role: Role; grade: Grade; userId: string; }
-export type ViewName = 'home' | 'timeline';
+export type ViewName = 'home' | 'timeline' | 'planner' | 'report';
 export interface AppState {
   session: Session | null; // null이면 로그인 카드
   role: Role; grade: Grade;
@@ -118,6 +118,8 @@ export interface AppState {
   schedules: Schedule[]; // 현재 상태(시뮬레이션·등록 반영, 전 학년)
   focusScheduleId: string | null; // 타임라인에서 강조할 일정
   detailOpen: boolean; // 주 상세 패널
+  /** 개인 기상도(MVP 4): 내가 참가한다고 체크한 선택 일정 id */
+  personalChecked: string[];
 }
 export interface Store {
   getState(): AppState;
@@ -149,4 +151,19 @@ export interface Store {
   canUndo(): boolean;
   /** 처음 상태로 */
   reset(): void;
+
+  // ── 2차 루프 추가 계약 ──
+  /** 역할은 로그인으로만 정해진다. setRole은 더 이상 역할을 바꾸지 않는다(무시). */
+  /** 로그인 시도. 아이디가 다른 역할에 묶여 있으면 거부. 성공하면 login과 같다 */
+  tryLogin(session: Session): { ok: true } | { ok: false; reason: 'id_bound'; boundRole: Role };
+  /** 개인 기상도: 선택 일정(optional) 참가 체크 */
+  setPersonalChecked(id: string, checked: boolean): void;
+  /** 개인 기상도 예보(로그인 학년). 선택 일정은 체크한 것만 p=1, 나머지 p=0, 개인 과제(type 'personal') 포함. 기준선은 학년 예보의 W̄ */
+  getPersonalForecast(): GradeForecast;
+  /** 개인 과제 추가(학생만). w = hours ÷ 4, L = startDate~due 일수(양끝 포함), p = 1, type 'personal', 이동 가능. 잘못된 값이면 null. 되돌리기 대상 */
+  addPersonalTask(input: { name: string; hours: number; startDate: string; due: string }): Schedule | null;
+  /** 삭제: 개인 과제는 학생 본인, 사용자가 등록한 일정(source 'user')은 교사. 데모 일정은 삭제 불가. 되돌리기 대상 */
+  removeSchedule(id: string): boolean;
+  /** 제보(reported) 일정을 확정(교사만). 되돌리기 대상 */
+  confirmSchedule(id: string): boolean;
 }

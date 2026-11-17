@@ -69,6 +69,8 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
   let pending = false;
   let toastTimer = 0;
   let recs: Recommendation[] = [];
+  let prevPersonal: Weather[] | null = null;
+  let personalBadges: Record<number, { from: Weather; to: Weather }> = {};
 
   root.innerHTML = '';
   const el = document.createElement('div');
@@ -91,14 +93,29 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
   function render(): void {
     const st: AppState = store.getState();
     const teacher = st.role === 'teacher';
-    const list = st.schedules.filter((s) => s.grade === st.grade);
+    const list = st.schedules.filter((s) => s.grade === st.grade && (teacher ? s.type !== 'personal' : true));
     if (st.focusScheduleId && st.focusScheduleId !== lastFocus) selected = st.focusScheduleId;
     const focusNow = st.focusScheduleId && st.focusScheduleId !== lastFocus ? st.focusScheduleId : null;
     lastFocus = st.focusScheduleId;
     if (selected && !list.some((s) => s.id === selected)) selected = null;
 
-    const weeks: WeekForecast[] = safe(() => store.getForecast().weeks, []);
-    const badges = safe(() => store.getBadges(), {} as Record<number, { from: Weather; to: Weather }>);
+    const weeks: WeekForecast[] = teacher ? safe(() => store.getForecast().weeks, []) : safe(() => store.getPersonalForecast().weeks, []);
+    let badges: Record<number, { from: Weather; to: Weather }>;
+    if (teacher) {
+      badges = safe(() => store.getBadges(), {} as Record<number, { from: Weather; to: Weather }>);
+      prevPersonal = null;
+    } else {
+      const now = weeks.map((w) => w.weather);
+      if (prevPersonal && prevPersonal.length === now.length) {
+        const nb: Record<number, { from: Weather; to: Weather }> = {};
+        now.forEach((w, i) => {
+          if (prevPersonal![i] !== w) nb[i] = { from: prevPersonal![i], to: w };
+        });
+        if (Object.keys(nb).length) personalBadges = nb;
+      } else personalBadges = {};
+      prevPersonal = now;
+      badges = personalBadges;
+    }
     const sel = list.find((s) => s.id === selected) ?? null;
     recs = sel && !sel.fixed ? safe(() => recommendDates(st.schedules, sel).slice(0, 3), []) : [];
 
@@ -106,18 +123,18 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
 
     // 주 눈금
     let head = '';
+    let strip = '';
     for (let i = 0; i < WEEKS; i++) {
       const wk = weeks[i];
       const weather: Weather = wk?.weather ?? 'sunny';
       const r = wk ? wk.R.toFixed(2) : '–';
       const ws = fromN(START + i * 7);
       const b = badges[i];
-      const pinIdx = recs.findIndex((x) => x.weekIndex === i);
       const pins = recs
         .map((x, k) => (x.weekIndex === i ? `<span class="tl-pin" data-testid="top3-pin-${k}" title="추천 ${k + 1}">${k + 1}</span>` : ''))
         .join('');
+      if (pins) strip += `<div class="tl-pins" style="left:${i * 7 * DAY}px;width:${7 * DAY}px">${pins}</div>`;
       head += `<div class="tl-week" data-testid="tl-week-${i}" data-week="${i}" data-weather="${weather}" data-r="${r}" style="left:${i * 7 * DAY}px;width:${7 * DAY}px">
-        ${pinIdx >= 0 ? `<div class="tl-pins">${pins}</div>` : ''}
         <div class="tl-week-top"><span class="tl-wn">${i + 1}주</span><span class="sub">${md(ws).replace(/\(.\)/, '')}</span></div>
         <div class="tl-week-mid"><img src="/weather/${weather}.webp" width="24" height="24" alt=""><span class="num">${r}</span></div>
         <div class="tl-week-name sub">${WEATHER_LABEL[weather]}</div>
@@ -127,6 +144,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
 
     // 유형별 줄
     let rows = '';
+    let labels = '';
     for (const row of ROWS) {
       const items = list.filter((s) => row.types.includes(s.type)).sort((a, b) => span(a)[0] - span(b)[0]);
       if (!items.length) continue;
@@ -144,16 +162,18 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
       const bars = placed
         .map(({ s, lane, a, b }) => {
           const w = Math.max(1, b - a + 1) * DAY;
-          const cls = ['tl-bar', s.fixed ? 'is-fixed' : '', s.status === 'reported' ? 'is-reported' : '', s.id === selected ? 'is-selected' : '', movable(s) ? 'is-movable' : ''].join(' ');
+          const locked = !movable(s);
+          const cls = ['tl-bar', s.type === 'personal' ? 'is-personal' : '', s.fixed ? 'is-fixed' : '', locked && !s.fixed ? 'is-locked' : '', s.status === 'reported' ? 'is-reported' : '', s.id === selected ? 'is-selected' : '', movable(s) ? 'is-movable' : ''].join(' ');
           const adj = s.w !== s.defaultW ? '<span class="tl-adj">무게 조정</span>' : '';
-          return `<button type="button" class="${cls}" data-testid="bar-${esc(s.id)}" data-id="${esc(s.id)}" data-due="${s.due}" data-fixed="${s.fixed}" data-status="${s.status}"
+          return `<button type="button" class="${cls}" data-testid="bar-${esc(s.id)}" data-id="${esc(s.id)}" data-due="${s.due}" data-fixed="${s.fixed}" data-status="${s.status}" data-type="${s.type}"
             style="left:${(a - START) * DAY}px;width:${w}px;top:${lane * 40 + 8}px" title="${esc(s.name)} · 마감 ${md(s.due)}">
-            ${s.fixed ? LOCK : ''}<span class="tl-name">${esc(s.name)}</span>${s.difficulty ? `<span class="tl-dots">${DOTS[s.difficulty]}</span>` : ''}${adj}
+            ${locked ? LOCK : ''}<span class="tl-name">${esc(s.name)}</span>${s.difficulty ? `<span class="tl-dots">${DOTS[s.difficulty]}</span>` : ''}${adj}
           </button>`;
         })
         .join('');
       const h = laneEnds.length * 40 + 8;
-      rows += `<div class="tl-row" style="height:${h}px"><div class="tl-row-label">${row.label}</div><div class="tl-row-track" style="height:${h}px">${bars}</div></div>`;
+      rows += `<div class="tl-row" data-row="${row.key}" style="height:${h}px"><div class="tl-row-track" style="height:${h}px">${bars}</div></div>`;
+      labels += `<div class="tl-row-label" data-row="${row.key}" style="height:${h}px">${row.label}</div>`;
     }
     if (!rows) rows = `<div class="tl-empty sub">이 학년에는 아직 등록된 일정이 없어요.</div>`;
 
@@ -162,17 +182,24 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
 
     el.innerHTML = `
       <div class="tl-toolbar glass">
-        <div><h2 class="tl-title">마감 시뮬레이터</h2><p class="sub">${teacher ? '막대를 끌어 마감을 옮겨 보세요.' : '학교 일정은 선생님만 옮길 수 있어요.'}</p></div>
+        <div><h2 class="tl-title">마감 시뮬레이터 <span class="tl-mode" data-testid="tl-mode-label">${teacher ? '학년 기상도' : '개인 기상도'}</span></h2><p class="sub">${teacher ? '막대를 끌어 마감을 옮겨 보세요.' : '개인 과제 막대를 끌어 옮겨 보세요. 학교 일정은 선생님만 옮길 수 있어요.'}</p></div>
         <div class="tl-actions">
           <button type="button" class="btn btn-ghost" data-testid="undo" ${canUndo ? '' : 'disabled'}>되돌리기</button>
           <button type="button" class="btn btn-ghost" data-testid="reset">초기화</button>
         </div>
       </div>
       <div class="tl-body">
-        <div class="tl-scroll glass">
-          <div class="tl-canvas" style="width:${DAYS * DAY + 120}px">
-            <div class="tl-head"><div class="tl-row-label"></div><div class="tl-head-track" style="width:${DAYS * DAY}px">${head}</div></div>
-            <div class="tl-rows">${rows}<div class="tl-today" style="left:${120 + todayX}px"><span>오늘</span></div></div>
+        <div class="tl-frame glass">
+          <div class="tl-labels"><div class="tl-labels-head"></div>${labels}</div>
+          <div class="tl-scroll-wrap">
+            <div class="tl-scroll">
+              <div class="tl-canvas" style="width:${DAYS * DAY}px">
+                <div class="tl-strip">${strip}<span class="tl-today-pill" style="left:${todayX}px">오늘 ${md(SEMESTER.today).replace(/\(.\)/, '')}</span></div>
+                <div class="tl-head"><div class="tl-head-track" style="width:${DAYS * DAY}px">${head}</div></div>
+                <div class="tl-rows">${rows}</div>
+                <div class="tl-today" style="left:${todayX}px"></div>
+              </div>
+            </div>
           </div>
         </div>
         ${sel ? panel(sel, teacher) : ''}
@@ -182,14 +209,14 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     const sc = el.querySelector<HTMLElement>('.tl-scroll')!;
     const target = focusNow ? el.querySelector<HTMLElement>(`[data-id="${CSS.escape(focusNow)}"]`) : null;
     if (target) {
-      sc.scrollLeft = Math.max(0, target.offsetLeft + 120 - 200);
+      sc.scrollLeft = Math.max(0, target.offsetLeft - 200);
       firstScroll = false;
     } else if (firstScroll && root.offsetParent !== null) {
-      sc.scrollLeft = Math.max(0, 120 + todayX - 240);
+      sc.scrollLeft = Math.max(0, todayX - 240);
       firstScroll = false;
     } else if (firstScroll) {
       // 아직 숨겨진 상태 — 보일 때 다시 맞춘다
-      sc.scrollLeft = Math.max(0, 120 + todayX - 240);
+      sc.scrollLeft = Math.max(0, todayX - 240);
       if (sc.scrollLeft > 0) firstScroll = false;
     } else sc.scrollLeft = prevScroll;
   }
@@ -197,6 +224,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
   function panel(s: Schedule, teacher: boolean): string {
     const canW = safe(() => store.can('editWeight'), false);
     let top = '';
+    const canApply = s.type === 'personal' ? !teacher : teacher && store.can('move');
     if (s.fixed) top = `<p class="sub tl-note">학교가 정한 일정이라 옮길 수 없어요.</p>`;
     else if (!recs.length) top = `<div data-testid="top3"><p class="sub tl-note">옮길 수 있는 날짜가 없어요.</p></div>`;
     else
@@ -204,7 +232,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
         .map(
           (r, k) => `<li class="tl-top3-item" data-testid="top3-item-${k}" data-date="${r.date}" data-r="${r.maxR.toFixed(2)}" data-weather="${r.weather}">
           <span>${md(r.date)} · 예상 R <span class="num">${r.maxR.toFixed(2)}</span> · ${WEATHER_LABEL[r.weather]}</span>
-          ${teacher && store.can('move') ? `<button type="button" class="btn btn-ghost tl-apply" data-date="${r.date}">이 날짜로 옮기기</button>` : ''}
+          ${canApply ? `<button type="button" class="btn btn-ghost tl-apply" data-date="${r.date}">이 날짜로 옮기기</button>` : ''}
         </li>`,
         )
         .join('')}</ol></div>`;
@@ -218,6 +246,8 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
         <dt>참여율 p</dt><dd class="num">${Math.round(s.p * 100)}%</dd>
         <dt>고정</dt><dd>${s.fixed ? '고정 일정' : '옮길 수 있어요'}</dd>
       </dl>
+      ${s.status === 'reported' && teacher ? `<div class="tl-confirm"><p class="sub tl-note">학생이 제보한 일정이에요.</p><button type="button" class="btn" data-testid="confirm-btn">확정하기</button></div>` : ''}
+      ${s.type === 'personal' && !teacher ? `<button type="button" class="btn btn-ghost tl-remove" data-testid="task-remove">삭제</button>` : ''}
       ${top}
       <div class="tl-weight">
         <label for="tl-w">무게</label>
@@ -237,6 +267,19 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     if (t.closest('.tl-close')) {
       selected = null;
       return render();
+    }
+    if (t.closest('[data-testid="confirm-btn"]') && selected) {
+      if (!store.confirmSchedule(selected)) toast('확정하지 못했어요. 다시 시도해 주세요.');
+      return;
+    }
+    if (t.closest('[data-testid="task-remove"]') && selected) {
+      const id = selected;
+      selected = null;
+      if (!store.removeSchedule(id)) {
+        selected = id;
+        toast('삭제하지 못했어요. 다시 시도해 주세요.');
+      }
+      return;
     }
     const ap = t.closest<HTMLElement>('.tl-apply');
     if (ap && selected) return void doMove(selected, ap.dataset.date!);
@@ -351,7 +394,7 @@ export function mountTimeline(root: HTMLElement, store: Store): void {
     if (ents.some((x) => x.isIntersecting) && firstScroll) {
       const sc = el.querySelector<HTMLElement>('.tl-scroll');
       if (sc) {
-        sc.scrollLeft = Math.max(0, 120 + (toN(SEMESTER.today) - START) * DAY - 240);
+        sc.scrollLeft = Math.max(0, (toN(SEMESTER.today) - START) * DAY - 240);
         firstScroll = false;
       }
     }

@@ -1,0 +1,58 @@
+/* complete */
+.complete-chip {
+  position: fixed; right: 24px; bottom: 24px; z-index: 50;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-radius: var(--radius-pill);
+  background: var(--glass-strong); border: 1px solid var(--line);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow); color: var(--ink-2); font-size: var(--fs-sub);
+}
+.complete-chip[hidden] { display: none; }
+.complete-chip .cc-count { font-weight: var(--fw-b); color: var(--ink); font-variant-numeric: tabular-nums; }
+.complete-chip .cc-step { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-3); }
+.complete-chip .cc-step.is-on { color: var(--ink); }
+.complete-chip .cc-step.is-on .cc-ico { color: var(--w-sunny); }
+.complete-chip .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.complete-chip.is-done { padding: 0; background: none; border: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.complete-chip .cc-open {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  font: inherit; font-size: var(--fs-body); font-weight: var(--fw-b);
+  padding: 12px 20px; border-radius: var(--radius-pill); border: 0;
+  background: var(--blue); color: var(--blue-ink); box-shadow: var(--shadow-lift);
+  transition: transform var(--dur) var(--ease);
+}
+.complete-chip .cc-open:hover { transform: translateY(-2px); }
+.complete-chip .cc-open:focus-visible, .cs-close:focus-visible { outline: 3px solid var(--w-sunny); outline-offset: 3px; }
+
+.complete-screen {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 42%, rgba(251,238,198,.55) 0%, rgba(232,168,28,.18) 38%, rgba(8,12,20,.45) 100%);
+  animation: cs-in .5s var(--ease);
+}
+.complete-screen .cs-rays {
+  position: absolute; left: 50%; top: 42%; width: 1400px; height: 1400px; margin: -700px 0 0 -700px;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--w-sunny) 35%, transparent) 0deg 6deg, transparent 6deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 0%, transparent 60%); mask: radial-gradient(circle, #000 0%, transparent 60%);
+  animation: cs-spin 40s linear infinite; pointer-events: none;
+}
+.complete-screen .cs-card {
+  position: relative; text-align: center; padding: var(--s5) 56px; border-radius: var(--radius);
+  background: var(--glass-strong); border: 1px solid var(--line); box-shadow: var(--shadow-lift);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color: var(--ink);
+  display: flex; flex-direction: column; align-items: center; gap: var(--s1);
+}
+.complete-screen .cs-icon { width: 200px; height: 200px; margin-top: -120px; filter: drop-shadow(0 12px 32px rgba(232,168,28,.5)); }
+.complete-screen .cs-title { margin: 0; font-size: var(--fs-title); font-weight: var(--fw-b); }
+.complete-screen .cs-code { font-size: var(--fs-hero); font-weight: var(--fw-b); font-variant-numeric: tabular-nums; letter-spacing: .12em; color: var(--ink); line-height: 1.1; }
+.complete-screen .cs-sub { margin: 0; color: var(--ink-2); }
+.complete-screen .cs-close {
+  margin-top: var(--s2); font: inherit; font-weight: var(--fw-b); cursor: pointer;
+  padding: 10px 28px; border-radius: var(--radius-pill); border: 1px solid var(--line-ink);
+  background: var(--white); color: var(--ink);
+}
+@keyframes cs-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cs-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .complete-screen, .complete-screen .cs-rays { animation: none; }
+}

@@ -1,0 +1,36 @@
+/* background — SPEC 5-3 */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  transition: background-image 0.6s var(--ease);
+}
+.bg-layer .bg-video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 0.6s var(--ease);
+}
+.bg-layer .bg-video.is-on { opacity: 1; }
+.bg-layer .bg-preload { display: none; }
+.bg-layer[data-poster="true"] .bg-video,
+.bg-layer[data-fallback="true"] .bg-video { opacity: 0 !important; }
+/* 가독성 막: 위는 투명, 아래로 어둡게 */
+.bg-layer::after {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(180deg, rgba(8,12,20,.10) 0%, rgba(8,12,20,.22) 50%, rgba(8,12,20,.50) 100%);
+  transition: background 0.6s var(--ease);
+}
+.bg-layer[data-scene="main"]::after {
+  background: linear-gradient(180deg, rgba(8,12,20,.05) 0%, rgba(8,12,20,.20) 55%, rgba(8,12,20,.55) 100%);
+}
+.bg-layer[data-weather="sunny"]::after {
+  background: linear-gradient(180deg, rgba(8,12,20,.18) 0%, rgba(8,12,20,.32) 50%, rgba(8,12,20,.58) 100%);
+}
+.bg-layer[data-weather="rain"]::after {
+  background: linear-gradient(180deg, rgba(8,12,20,.08) 0%, rgba(8,12,20,.25) 50%, rgba(8,12,20,.55) 100%);
+}
+.bg-layer[data-weather="storm"]::after {
+  background: linear-gradient(180deg, rgba(90,15,20,.18) 0%, rgba(60,10,14,.32) 50%, rgba(30,4,8,.62) 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bg-layer .bg-video { display: none; }
+  .bg-layer, .bg-layer::after { transition: none; }
+}

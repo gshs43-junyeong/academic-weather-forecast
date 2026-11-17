@@ -4,9 +4,17 @@ import './styles/base.css';
 import './styles/home.css';
 import './styles/timeline.css';
 import './styles/register.css';
+import './styles/planner.css';
+import './styles/report.css';
+import './styles/complete.css';
+import './styles/background.css';
 import { createStore } from './ui/store';
 import { mountShell } from './ui/shell';
+import { mountComplete } from './ui/complete';
+import { mountBackground } from './ui/background';
 
 const root = document.getElementById('app')!;
 const store = createStore();
+mountBackground(store);
 mountShell(root, store);
+mountComplete(store);

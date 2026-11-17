@@ -30,13 +30,48 @@ function monthWeekLabel(start: string): string {
   return `${p.m}월 ${Math.ceil(p.day / 7)}주차`;
 }
 
+function addDays(d: string, n: number): string {
+  const p = parts(d);
+  const t = new Date(Date.UTC(p.y, p.m - 1, p.day + n));
+  return t.toISOString().slice(0, 10);
+}
+
 function summary(state: AppState, wk: WeekForecast): string {
   if (wk.weather === 'sunny') return '한가한 주예요';
-  const due = state.schedules.filter((s) => s.grade === state.grade && s.due >= wk.start && s.due <= wk.end).length;
-  if (due > 0) return `마감 ${due}개가 겹쳤어요`;
-  const prep = wk.contributions.filter((c) => c.value > 0).length;
-  if (prep > 0) return `마감은 없지만 준비할 일정이 ${prep}개 있어요`;
-  return '한가한 주예요';
+  const ids = new Set(wk.contributions.filter((c) => c.value > 0).map((c) => c.scheduleId));
+  const until = addDays(wk.end, 7);
+  const n = state.schedules.filter((s) => {
+    if (!ids.has(s.id)) return false;
+    const inRange = (d?: string) => !!d && d >= wk.start && d <= until;
+    return inRange(s.due) || inRange(s.eventDate);
+  }).length;
+  if (wk.weather === 'cloudy') return n > 0 ? `준비할 일정이 ${n}개 있어요` : '한가한 주예요';
+  const base = `마감 ${n}개가 겹쳤어요`;
+  return wk.weather === 'storm' ? `이번 주는 폭풍이에요. ${base}` : base;
+}
+
+/** 폭풍 아이콘(storm.webp, 3초 반복)과 CSS 번쩍임을 같은 순간에 처음부터 시작 */
+let stormStamp = 0;
+function syncStorm(root: HTMLElement): void {
+  const flashes = Array.from(root.querySelectorAll<HTMLElement>('.is-storm'));
+  flashes.forEach((el) => el.classList.remove('storm-sync'));
+  if (flashes.length === 0) return;
+  const imgs = Array.from(root.querySelectorAll<HTMLImageElement>('img[src*="/weather/storm.webp"]'));
+  const url = `/weather/storm.webp?s=${++stormStamp}`;
+  const loads = imgs.map((img) => new Promise<void>((res) => {
+    img.addEventListener('load', () => res(), { once: true });
+    img.addEventListener('error', () => res(), { once: true });
+    img.src = url;
+  }));
+  const start = () => {
+    if (!flashes[0]?.isConnected) return;
+    requestAnimationFrame(() => {
+      flashes.forEach((el) => el.classList.remove('storm-sync'));
+      void root.offsetWidth;
+      flashes.forEach((el) => el.classList.add('storm-sync'));
+    });
+  };
+  Promise.all(loads).then(start);
 }
 
 function heroHtml(state: AppState, wk: WeekForecast): string {
@@ -223,6 +258,7 @@ export function mountHome(root: HTMLElement, store: Store): void {
       </div>
       ${stripHtml(fc, state)}
     </div>`;
+    syncStorm(root);
     if (calScroll !== null) {
       const sc = root.querySelector('.cal-scroll');
       if (sc) sc.scrollTop = calScroll;

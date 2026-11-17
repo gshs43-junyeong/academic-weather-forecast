@@ -2,8 +2,26 @@ import type { Store, Role, Grade } from '../types';
 
 const DEFAULT_ID: Record<Role, string> = { student: 'student01', teacher: 'teacher01' };
 
-/** 로그인 카드. 계정·서버 없음 — 아이디만 비어 있지 않으면 통과, 비밀번호는 검증하지 않는다. */
-export function mountLogin(root: HTMLElement, store: Store): void {
+const ROLE_LABEL: Record<Role, string> = { student: '학생', teacher: '교사' };
+
+/** 타이틀 화면. [시작하기]를 누르면 onStart. */
+export function mountTitle(root: HTMLElement, onStart: () => void): void {
+  const wrap = document.createElement('div');
+  wrap.className = 'title-screen';
+  wrap.dataset.testid = 'title-screen';
+  wrap.innerHTML = `
+    <div class="title-inner">
+      <h1 class="title-main">학업 기상청</h1>
+      <p class="title-en">Forecast Loop</p>
+      <p class="title-lead">마감이 몰리는 주를 날씨로 미리 알려 주는 학업 예보예요.</p>
+      <button type="button" class="btn title-start" data-testid="title-start">시작하기</button>
+    </div>`;
+  root.appendChild(wrap);
+  wrap.querySelector('[data-testid="title-start"]')!.addEventListener('click', onStart);
+}
+
+/** 로그인 카드. 서버 없음 — 아이디는 처음 로그인한 역할에 묶인다(store.tryLogin). 비밀번호는 검증하지 않는다. */
+export function mountLogin(root: HTMLElement, store: Store, onBack?: () => void): void {
   let role: Role = store.getState().role;
   let grade: Grade = 1;
   const wrap = document.createElement('div');
@@ -27,9 +45,10 @@ export function mountLogin(root: HTMLElement, store: Store): void {
           ${[1, 2, 3].map((g) => `<button type="button" class="pill" data-grade="${g}">${g}학년</button>`).join('')}
         </div>
       </div>
-      <p class="login-error" role="alert" hidden></p>
+      <p class="login-error" data-testid="login-error" role="alert" hidden></p>
       <button type="submit" class="btn login-submit" data-testid="login-submit">로그인</button>
       <p class="sub login-hint">체험용 계정이 미리 입력돼 있어요. 바로 로그인해 보세요.</p>
+      <button type="button" class="link-btn login-back" data-testid="login-back">처음으로</button>
     </form>`;
   root.appendChild(wrap);
 
@@ -50,6 +69,8 @@ export function mountLogin(root: HTMLElement, store: Store): void {
       if (next === role) return;
       if (idInput.value.trim() === '' || idInput.value === DEFAULT_ID[role]) idInput.value = DEFAULT_ID[next];
       role = next;
+      err.hidden = true;
+      idInput.classList.remove('is-invalid');
       paint();
     }),
   );
@@ -67,6 +88,14 @@ export function mountLogin(root: HTMLElement, store: Store): void {
       idInput.focus();
       return;
     }
-    store.login({ role, grade, userId });
+    const res = store.tryLogin({ role, grade, userId });
+    if (!res.ok) {
+      const b = ROLE_LABEL[res.boundRole];
+      err.textContent = `이 아이디는 ${b} 계정이에요. ${b}으로 로그인해 주세요.`;
+      err.hidden = false;
+      idInput.classList.add('is-invalid');
+      idInput.focus();
+    }
   });
+  wrap.querySelector('[data-testid="login-back"]')!.addEventListener('click', () => onBack?.());
 }
