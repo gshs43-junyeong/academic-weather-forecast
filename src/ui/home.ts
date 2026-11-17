@@ -285,9 +285,20 @@ export function mountHome(root: HTMLElement, store: Store): void {
       store.selectWeek(idx, openDetail);
     }
   });
-  root.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && store.getState().detailOpen) store.closeDetail();
-  });
+  // 캡처 단계에서 먼저 확인: 다른 창이 Esc로 스스로 닫히기 전에 보이는지 판단한다.
+  const isShown = (testid: string): boolean => {
+    const el = document.querySelector<HTMLElement>(`[data-testid="${testid}"]`);
+    if (!el || !el.isConnected) return false;
+    if (el.hidden || el.closest('[hidden]')) return false;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+    return el.getClientRects().length > 0;
+  };
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !store.getState().detailOpen) return;
+    if (['register-modal', 'search-modal', 'about-modal', 'complete-screen'].some(isShown)) return;
+    store.closeDetail();
+  }, true);
 
   store.subscribe(render);
   render(store.getState());
